@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="h-full select-none">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desktop Music Player - Interactive Playlist & Theme Extraction</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'sans-serif'],
+          },
+          animation: {
+            'cover-float': 'coverFloat 6s ease-in-out infinite',
+            'glow-pulse': 'glowPulse 4s ease-in-out infinite alternate',
+            'eq-bar-1': 'eqBar 0.8s ease-in-out infinite alternate',
+            'eq-bar-2': 'eqBar 1.2s ease-in-out infinite alternate 0.2s',
+            'eq-bar-3': 'eqBar 0.6s ease-in-out infinite alternate 0.4s',
+          },
+          keyframes: {
+            coverFloat: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' },
+            },
+            glowPulse: {
+              '0%': { opacity: '0.55', transform: 'scale(1)' },
+              '100%': { opacity: '0.9', transform: 'scale(1.08)' },
+            },
+            eqBar: {
+              '0%': { height: '20%' },
+              '100%': { height: '100%' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      /* Dynamic Theme Variables set via Canvas Extractor */
+      --theme-rgb: 217, 119, 6;
+      --glow-rgb: 245, 158, 11;
+      --theme-hex: #d97706;
+      --theme-border-rgb: 251, 191, 36;
+    }
+
+    /* Hide scrollbars for seamless lyric scrolling */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Top & Bottom Gradient Fade Mask for Lyrics Column */
+    .lyrics-mask {
+      mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    }
+
+    /* Fused Bottom Dock & Glass Panels */
+    .glass-dock {
+      background: rgba(18, 15, 13, 0.88);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .glass-panel {
+      background: rgba(18, 15, 13, 0.92);
+      backdrop-filter: blur(35px) saturate(180%);
+      -webkit-backdrop-filter: blur(35px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    /* Dynamic Accent Text Glow on Active Lyrics */
+    .active-lyric-glow {
+      text-shadow: 0 0 24px rgba(255, 255, 255, 0.7), 0 0 16px rgba(var(--theme-rgb), 0.6);
+    }
+
+    /* Dynamic Fused Progress Layer Fill */
+    .dynamic-progress-fill {
+      background-color: rgba(var(--theme-rgb), 0.45);
+      border-right: 2px solid rgba(var(--theme-border-rgb), 0.9);
+    }
+
+    /* Dynamic Album Cover Glow */
+    .dynamic-cover-glow {
+      box-shadow: 0 20px 60px -10px rgba(var(--theme-rgb), 0.65);
+    }
+
+    /* Dynamic Ambient Background Orbs */
+    .dynamic-orb-primary {
+      background: rgb(var(--theme-rgb));
+    }
+    .dynamic-orb-secondary {
+      background: rgb(var(--glow-rgb));
+    }
+
+    /* Active Track Card Highlight in Playlist Drawer */
+    .playlist-item-active {
+      background-color: rgba(var(--theme-rgb), 0.25) !important;
+      border-color: rgba(var(--theme-border-rgb), 0.5) !important;
+    }
+
+    /* Custom Single Horizontal Volume Slider */
+    input[type=range].vol-range {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 9999px;
+      outline: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    input[type=range].vol-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    input[type=range].vol-range::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+      background: rgb(var(--theme-border-rgb));
+    }
+
+    /* Metadata Transitions */
+    .meta-fade {
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    /* Dynamic Element Theme Transition */
+    body, div, span, button {
+      transition: background-color 0.5s ease, border-color 0.5s ease, color 0.35s ease;
+    }
+  </style>
+</head>
+
+<body class="bg-black text-slate-100 font-sans h-full overflow-hidden antialiased select-none">
+  <!-- Audio Element -->
+  <audio id="audio-player" preload="metadata" crossorigin="anonymous"></audio>
+
+  <!-- Ambient Blurred Background with Dynamic Color Overlay -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <!-- Blurred Cover Image Background -->
+    <div id="bg-blur" class="absolute -inset-24 bg-cover bg-center filter blur-[120px] brightness-[0.32] contrast-[1.15] scale-110 transition-all duration-1000 opacity-90" 
+         style="background-image: url('https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop');"></div>
+    
+    <!-- Dynamic Color Gradient Ambient Orbs -->
+    <div id="ambient-orb-1" class="dynamic-orb-primary absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[140px] opacity-40 transition-all duration-1000 animate-glow-pulse"></div>
+    <div id="ambient-orb-2" class="dynamic-orb-secondary absolute -bottom-32 -right-32 w-[600px] h-[600px] rounded-full blur-[140px] opacity-30 transition-all duration-1000 animate-glow-pulse" style="animation-delay: 2s;"></div>
+
+    <!-- Dark Vignette Overlay -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/60"></div>
+  </div>
+
+  <div class="relative z-10 flex flex-col h-full max-w-[1700px] mx-auto">
+    
+    <!-- Desktop Header / Title Bar -->
+    <header class="flex items-center justify-between px-8 py-4 text-xs font-medium text-slate-300/80">
+      <div class="flex items-center space-x-3">
+        <span id="header-status-dot" class="w-2.5 h-2.5 rounded-full transition-colors duration-500 shadow-sm" style="background-color: rgb(var(--theme-rgb));"></span>
+        <span id="top-track-info" class="meta-fade text-slate-300 font-normal opacity-90 truncate max-w-md">
+          VALORANT, Grabbitz, Oli Sykes - If The Sun Burns Out Tonight
+        </span>
+      </div>
+
+      <!-- Top Right Actions -->
+      <div class="flex items-center space-x-3">
+        
+        <!-- Custom Cover Extraction Test Button -->
+        <button id="btn-custom-cover" class="px-3 py-1 text-[11px] font-medium rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-slate-100 transition active:scale-95 flex items-center space-x-1.5 shadow-md" title="上传或输入图片URL测试Canvas颜色提取">
+          <i class="fa-solid fa-palette text-xs text-amber-300"></i>
+          <span>提取自定封面颜色</span>
+        </button>
+
+        <!-- Dynamic Color Extraction Badge -->
+        <span id="color-extract-badge" class="px-2.5 py-0.5 text-[10px] font-mono rounded-full border border-white/15 bg-black/40 text-slate-300 transition-all">
+          Canvas Extract: RGB(217,119,6)
+        </span>
+
+        <!-- Translation Toggle Pill -->
+        <button id="top-trans-toggle" class="px-2.5 py-1 text-[11px] rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-slate-200 transition active:scale-95" title="切换双语/单语歌词">
+          文/A
+        </button>
+
+        <!-- Master Quality Badge -->
+        <span id="quality-badge" class="px-2.5 py-0.5 text-[10px] font-bold rounded-full border transition-colors duration-500" style="border-color: rgba(var(--theme-border-rgb), 0.5); color: rgb(var(--theme-border-rgb)); background: rgba(var(--theme-rgb), 0.15);">
+          母带
+        </span>
+
+        <!-- Window Controls -->
+        <div class="flex items-center space-x-2.5 pl-3">
+          <button class="w-3 h-3 rounded-full bg-slate-600/80 hover:bg-slate-400 transition" aria-label="Minimize"></button>
+          <button class="w-3 h-3 rounded-full bg-slate-600/80 hover:bg-slate-400 transition" aria-label="Maximize"></button>
+          <button class="w-3 h-3 rounded-full bg-rose-600/80 hover:bg-rose-500 transition" aria-label="Close"></button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 px-8 sm:px-14 lg:px-20 py-2 overflow-hidden items-center">
+      
+      <!-- LEFT COLUMN (~58% Width): Scrolling Lyrics Panel with 50% Viewport Center Padding -->
+      <section class="lg:col-span-7 h-full max-h-[calc(100vh-160px)] flex flex-col justify-center relative overflow-hidden">
+        <!-- 
+          lyrics-container with pt-[45vh] pb-[45vh] ensures 
+          active lyric line always scrolls to EXACT 50% VERTICAL CENTER of the viewport.
+        -->
+        <div id="lyrics-container" class="h-full overflow-y-auto no-scrollbar lyrics-mask pt-[45vh] pb-[45vh] space-y-9 scroll-smooth text-left pr-6">
+          <!-- Lyric lines dynamically rendered by JS -->
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN (~42% Width): Dynamic Album Cover & Metadata -->
+      <section class="lg:col-span-5 flex flex-col items-center lg:items-start justify-center space-y-7 lg:pl-10">
+        
+        <!-- Album Artwork Container with Dynamic Ambient Glow -->
+        <div class="relative group">
+          <!-- Dynamic Ambient Backing Glow -->
+          <div id="cover-glow-bg" class="absolute -inset-4 rounded-3xl blur-3xl z-0 opacity-70 pointer-events-none transition-all duration-700" style="background: rgba(var(--theme-rgb), 0.45);"></div>
+
+          <!-- Cover Image Wrapper -->
+          <div id="cover-wrapper" class="w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96 rounded-2xl overflow-hidden relative z-10 border border-white/15 transition-all duration-500 ease-out shadow-2xl scale-100">
+            <img id="main-cover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop" crossorigin="anonymous" alt="Album Cover" class="w-full h-full object-cover transition-opacity duration-300">
+          </div>
+        </div>
+
+        <!-- Track Metadata -->
+        <div class="text-center lg:text-left space-y-3 max-w-lg w-full">
+          <h1 id="main-title" class="meta-fade text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-snug">
+            The Sun Burns Out Tonight (feat. Oli Sykes & Courtney LaPlante)
+          </h1>
+          <p id="main-artist" class="meta-fade text-sm sm:text-base text-slate-300/70 font-medium">
+            VALORANT, Grabbitz, Oli Sykes & Courtney LaPlante
+          </p>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- BOTTOM FOOTER DOCK WITH FUSED PROGRESS BAR -->
+    <footer class="px-8 pb-7 pt-2 z-30 relative">
+      
+      <!-- Glass Dock Outer Wrapper -->
+      <div id="fused-dock" class="relative w-full h-16 flex items-center justify-between px-4 sm:px-6 rounded-2xl shadow-2xl overflow-hidden cursor-pointer group">
+        
+        <!-- Glassmorphism Background -->
+        <div class="glass-dock absolute inset-0 pointer-events-none z-0"></div>
+
+        <!-- Dynamic Fused Progress Layer Filling Left-to-Right -->
+        <div id="progress-layer" class="dynamic-progress-fill absolute top-0 left-0 bottom-0 transition-all duration-100 ease-linear z-0 pointer-events-none" style="width: 0%;"></div>
+
+        <!-- Hover Seek Line & Tooltip -->
+        <div id="hover-guide" class="absolute top-0 bottom-0 w-0.5 bg-white/80 pointer-events-none opacity-0 transition-opacity z-20"></div>
+        <div id="hover-tooltip" class="absolute -top-9 transform -translate-x-1/2 px-2.5 py-1 bg-zinc-900/95 text-xs font-mono font-bold rounded-md border border-white/15 opacity-0 pointer-events-none transition-opacity z-30 shadow-xl" style="color: rgb(var(--theme-border-rgb));">
+          00:00
+        </div>
+
+        <!-- LEFT SECTION: Song Preview Pill Badge -->
+        <div class="relative z-10 flex items-center space-x-3 w-1/3 min-w-[220px] pointer-events-auto">
+          <div id="pill-badge" class="flex items-center space-x-3 transition-colors duration-500 py-1.5 px-2.5 rounded-xl border shadow-md max-w-xs cursor-pointer" style="background-color: rgba(var(--theme-rgb), 0.85); border-color: rgba(var(--theme-border-rgb), 0.3);">
+            <img id="pill-cover" src="https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=200&auto=format&fit=crop" crossorigin="anonymous" alt="Thumbnail" class="w-8 h-8 rounded-lg object-cover flex-shrink-0 transition-opacity duration-300">
+            <div class="truncate text-left leading-tight">
+              <div id="pill-title" class="meta-fade text-xs font-bold text-white truncate">If The Sun Burns Out Tonigh...</div>
+              <div id="pill-artist" class="meta-fade text-[10px] text-white/80 truncate">VALORANT / Grabbitz / Oli Sykes...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER SECTION: Playback Buttons -->
+        <div class="relative z-10 flex items-center space-x-6 pointer-events-auto">
+          <!-- Shuffle Button -->
+          <button id="btn-shuffle" class="text-slate-400 hover:text-white transition p-1" title="随机播放">
+            <i class="fa-solid fa-shuffle text-xs"></i>
+          </button>
+
+          <!-- Previous Button -->
+          <button id="btn-prev" class="text-slate-300 hover:text-white transition transform active:scale-90 p-1" title="上一首">
+            <i class="fa-solid fa-backward-step text-base"></i>
+          </button>
+
+          <!-- Play/Pause Main Circle -->
+          <button id="btn-play" class="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition" title="播放/暂停">
+            <i id="play-icon" class="fa-solid fa-play text-sm ml-0.5"></i>
+          </button>
+
+          <!-- Next Button -->
+          <button id="btn-next" class="text-slate-300 hover:text-white transition transform active:scale-90 p-1" title="下一首">
+            <i class="fa-solid fa-forward-step text-base"></i>
+          </button>
+
+          <!-- Repeat Mode Button -->
+          <button id="btn-loop" class="text-slate-300 hover:text-white transition p-1" title="循环模式">
+            <i class="fa-solid fa-repeat text-xs"></i>
+          </button>
+        </div>
+
+        <!-- RIGHT SECTION: Time, Single Volume Slider, Heart & Playlist Toggle -->
+        <div class="relative z-10 flex items-center justify-end space-x-3 sm:space-x-4 w-1/3 min-w-[280px] pointer-events-auto">
+          
+          <!-- Track Elapsed / Total Time -->
+          <div class="font-mono text-xs text-slate-200 tracking-wider">
+            <span id="time-curr" class="font-semibold">0:00</span>
+            <span class="text-slate-400 mx-0.5">/</span>
+            <span id="time-total" class="text-slate-400">3:46</span>
+          </div>
+
+          <!-- Mute/Volume Icon -->
+          <button id="btn-vol" class="text-slate-300 hover:text-white transition focus:outline-none" title="点击静音">
+            <i id="vol-icon" class="fa-solid fa-volume-high text-xs"></i>
+          </button>
+
+          <!-- SINGLE UNIFIED HORIZONTAL VOLUME SLIDER -->
+          <div id="vol-container" class="flex items-center px-1" title="音量调节 (可滚动鼠标滚轮)">
+            <input id="vol-slider" type="range" min="0" max="1" step="0.01" value="0.8" class="vol-range w-16 sm:w-20">
+          </div>
+
+          <!-- Favorite Button -->
+          <button id="btn-fav" class="text-rose-500 hover:text-rose-400 transition p-1" title="喜欢">
+            <i class="fa-solid fa-heart text-xs"></i>
+          </button>
+
+          <!-- Connected Playlist Drawer Button -->
+          <button id="btn-playlist-toggle" class="text-slate-300 hover:text-white transition p-1 relative" title="打开播放列表">
+            <i class="fa-solid fa-list-ul text-xs"></i>
+            <span class="absolute -top-1 -right-1.5 w-2 h-2 rounded-full" style="background-color: rgb(var(--theme-border-rgb));"></span>
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- INTERACTIVE PLAYLIST DRAWER / PANEL -->
+      <div id="playlist-drawer" class="absolute right-8 bottom-20 w-80 sm:w-96 rounded-2xl glass-panel shadow-2xl p-4 transition-all duration-300 transform opacity-0 translate-y-6 pointer-events-none z-50 border border-white/20">
+        
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-music text-xs" style="color: rgb(var(--theme-border-rgb));"></i>
+            <h3 class="text-xs font-extrabold tracking-wide uppercase text-white">播放列表 (<span id="playlist-count">4</span>)</h3>
+          </div>
+          <button id="close-playlist" class="text-slate-400 hover:text-white transition p-1 text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Scrollable Song List Container -->
+        <div id="playlist-items-container" class="space-y-1.5 max-h-80 overflow-y-auto no-scrollbar pr-1">
+          <!-- Playlist Cards dynamically rendered by JS -->
+        </div>
+
+        <!-- Drawer Footer Info -->
+        <div class="pt-3 mt-3 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-400 font-medium">
+          <span>点击歌曲立即切歌</span>
+          <span style="color: rgb(var(--theme-border-rgb));">智能主题色提取已启用</span>
+        </div>
+      </div>
+
+    </footer>
+
+  </div>
+
+  <!-- Custom Cover Extraction Upload / Test Modal -->
+  <div id="cover-modal" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-zinc-900 border border-white/20 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5 text-left">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+          <span>Canvas 封面颜色提取测试</span>
+        </h3>
+        <button id="close-modal" class="text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-300/80 leading-relaxed">
+        选择本地图片文件或粘贴图片网络地址。系统将通过 Canvas API 实时采样封面像素，精准提取主色调并全自动更新播放器主题。
+      </p>
+
+      <!-- Option 1: File Upload -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-200">1. 上传本地图片文件：</label>
+        <input type="file" id="file-input" accept="image/*" class="block w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500/20 file:text-amber-300 hover:file:bg-amber-500/30 cursor-pointer">
+      </div>
+
+      <!-- Option 2: Image URL Input -->
+      <div class="space-y-2">
+        <label class="block text-xs font-semibold text-slate-200">2. 或粘贴图片网络 URL：</label>
+        <div class="flex space-x-2">
+          <input type="text" id="url-input" placeholder="https://images.unsplash.com/..." class="flex-1 px-3 py-2 text-xs bg-black/60 border border-white/15 rounded-xl text-white outline-none focus:border-amber-400">
+          <button id="btn-apply-url" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs rounded-xl transition">提取</button>
+        </div>
+      </div>
+
+      <div class="pt-2 text-[11px] text-slate-400 flex items-center justify-between">
+        <span>支持 JPG, PNG, WEBP, GIF</span>
+        <span class="text-amber-300">Canvas 2D Context Sampling</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Playlist Dataset
+    const playlist = [
+      {
+        id: "track-1",
+        title: "The Sun Burns Out Tonight (feat. Oli Sykes & Courtney LaPlante)",
+        artist: "VALORANT, Grabbitz, Oli Sykes & Courtney LaPlante",
+        shortTitle: "If The Sun Burns Out Tonigh...",
+        shortArtist: "无畏契约 / Grabbitz / Oli Sykes...",
+        cover: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?q=80&w=800&auto=format&fit=crop",
+        duration: 226,
+        src: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f7922f.mp3?filename=cyberpunk-2099-10701.mp3",
+        lyrics: [
+          { time: 0, text: "It gets louder everyday", trans: "它永不止息 严声呐喊" },
+          { time: 5.0, text: "And in the darkness", trans: "当黑暗降临" },
+          { time: 9.5, text: "All I need is you", trans: "我需要的只有你" },
+          { time: 14.0, text: "If the sun burns out tonight", trans: "如果太阳在今夜熄灭" },
+          { time: 20.0, text: "If the sun burns out tonight", trans: "如果太阳在今夜熄灭" },
+          { time: 26.5, text: "Hit me where it hurts", trans: "刺痛我的最深处" },
+          { time: 32.0, text: "End of the world", trans: "世界末日" },
+          { time: 38.0, text: "All I need is you", trans: "我需要的只有你" },
+          { time: 45.0, text: "We will shine in the fading dark", trans: "我们将在渐渐微弱的漆黑中发光" },
+          { time: 52.0, text: "Beyond the horizon of silence", trans: "越过这片寂静的地平线" }
+        ]
+      },
+      {
+        id: "track-2",
+        title: "Quaver (feat. Nanahira) - Speedcore Symphony",
+        artist: "Camellia & Nanahira",
+        shortTitle: "Quaver (feat. Nanahira)...",
+        shortArtist: "Camellia / Nanahira...",
+        cover: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=800&auto=format&fit=crop",
+        duration: 184,
+        src: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=synthwave-80s-110045.mp3",
+        lyrics: [
+          { time: 0, text: "Driving through the neon glow", trans: "穿梭于霓虹流光之中" },
+          { time: 5.5, text: "City lights fade away slow", trans: "城市的灯火渐渐远去" },
+          { time: 11.0, text: "Electric dreams inside our eyes", trans: "我们眼中闪烁着电子梦境" },
+          { time: 17.5, text: "Underneath the midnight skies", trans: "在这片午夜的天空之下" },
+          { time: 24.0, text: "Speeding into the purple horizon", trans: "全速奔向紫色的地平线" },
+          { time: 31.0, text: "Can you feel the pulse tonight?", trans: "你今夜能感受那躁动的脉搏吗？" }
+        ]
+      },
+      {
+        id: "track-3",
+        title: "Gloom (Midnight Echoes)",
+        artist: "Lorn & Radiohead - Ambient Atmospheric",
+        shortTitle: "Gloom (Midnight Echoes)...",
+        shortArtist: "Lorn / Radiohead...",
+        cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=800&auto=format&fit=crop",
+        duration: 215,
+        src: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=atmospheric-ambient-110241.mp3",
+        lyrics: [
+          { time: 0, text: "Shadows dance across the wall", trans: "光影在墙面上徐徐起舞" },
+          { time: 6.0, text: "Whispers in the quiet hall", trans: "静谧长廊里的幽幽细语" },
+          { time: 12.5, text: "Fading memories remain", trans: "渐渐褪色的回忆依然伫立" },
+          { time: 19.0, text: "Washing away like autumn rain", trans: "如秋日沉雨洗涤干净" },
+          { time: 26.0, text: "In the gloom we find our peace", trans: "在这片幽暗中寻求宁静" }
+        ]
+      },
+      {
+        id: "track-4",
+        title: "Emerald Horizon (Forest Serenade)",
+        artist: "Tycho & Bonobo - Chillstep Melodies",
+        shortTitle: "Emerald Horizon...",
+        shortArtist: "Tycho / Bonobo...",
+        cover: "https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=800&auto=format&fit=crop",
+        duration: 198,
+        src: "https://cdn.pixabay.com/download/audio/2022/11/06/audio_2c10b7a840.mp3?filename=chill-lofi-124436.mp3",
+        lyrics: [
+          { time: 0, text: "Leaves rustling in the morning mist", trans: "晨雾中树叶沙沙作响" },
+          { time: 6.5, text: "Sunlight filtering through green canopy", trans: "阳光穿透翠绿的树冠" },
+          { time: 13.0, text: "A quiet path winding into forever", trans: "一条幽静的小径延伸向远方" },
+          { time: 20.0, text: "Listen to the song of the forest", trans: "倾听大森林的悠扬歌声" }
+        ]
+      }
+    ];
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+    let isSeeking = false;
+    let showTranslations = true;
+    let isPlaylistOpen = false;
+    let previousVolume = 0.8;
+
+    // DOM Elements
+    const audio = document.getElementById('audio-player');
+    const bgBlur = document.getElementById('bg-blur');
+
+    const coverWrapper = document.getElementById('cover-wrapper');
+    const coverGlowBg = document.getElementById('cover-glow-bg');
+    const mainCover = document.getElementById('main-cover');
+    const mainTitle = document.getElementById('main-title');
+    const mainArtist = document.getElementById('main-artist');
+    const topTrackInfo = document.getElementById('top-track-info');
+    const lyricsContainer = document.getElementById('lyrics-container');
+
+    const fusedDock = document.getElementById('fused-dock');
+    const progressLayer = document.getElementById('progress-layer');
+    const hoverGuide = document.getElementById('hover-guide');
+    const hoverTooltip = document.getElementById('hover-tooltip');
+
+    const pillCover = document.getElementById('pill-cover');
+    const pillTitle = document.getElementById('pill-title');
+    const pillArtist = document.getElementById('pill-artist');
+
+    const btnPlay = document.getElementById('btn-play');
+    const playIcon = document.getElementById('play-icon');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+
+    const timeCurr = document.getElementById('time-curr');
+    const timeTotal = document.getElementById('time-total');
+
+    const btnVol = document.getElementById('btn-vol');
+    const volIcon = document.getElementById('vol-icon');
+    const volSlider = document.getElementById('vol-slider');
+    const volContainer = document.getElementById('vol-container');
+
+    const topTransToggle = document.getElementById('top-trans-toggle');
+    const btnFav = document.getElementById('btn-fav');
+    const colorExtractBadge = document.getElementById('color-extract-badge');
+
+    // Playlist Drawer Elements
+    const btnPlaylistToggle = document.getElementById('btn-playlist-toggle');
+    const playlistDrawer = document.getElementById('playlist-drawer');
+    const closePlaylist = document.getElementById('close-playlist');
+    const playlistItemsContainer = document.getElementById('playlist-items-container');
+    const playlistCount = document.getElementById('playlist-count');
+
+    // Modal elements
+    const coverModal = document.getElementById('cover-modal');
+    const btnCustomCover = document.getElementById('btn-custom-cover');
+    const closeModal = document.getElementById('close-modal');
+    const fileInput = document.getElementById('file-input');
+    const urlInput = document.getElementById('url-input');
+    const btnApplyUrl = document.getElementById('btn-apply-url');
+
+    // RGB to HSL conversion helper
+    function rgbToHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+          case g: h = (b - r) / d + 2; break;
+          case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+      }
+      return { h, s, l };
+    }
+
+    // CANVAS API: Dynamic Cover Theme Color Extraction Engine
+    function extractColorFromCanvas(imgElement) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const size = 64;
+      canvas.width = size;
+      canvas.height = size;
+
+      const analyzePixels = () => {
+        try {
+          ctx.drawImage(imgElement, 0, 0, size, size);
+          const imageData = ctx.getImageData(0, 0, size, size).data;
+
+          let bestRgb = null;
+          let maxScore = -1;
+          let totalR = 0, totalG = 0, totalB = 0, validPixelCount = 0;
+
+          for (let i = 0; i < imageData.length; i += 4) {
+            const r = imageData[i];
+            const g = imageData[i + 1];
+            const b = imageData[i + 2];
+            const a = imageData[i + 3];
+
+            if (a < 128) continue;
+
+            const { h, s, l } = rgbToHsl(r, g, b);
+
+            if (l > 0.15 && l < 0.85 && s > 0.15) {
+              totalR += r; totalG += g; totalB += b;
+              validPixelCount++;
+
+              const score = s * (1 - Math.abs(l - 0.5));
+              if (score > maxScore) {
+                maxScore = score;
+                bestRgb = { r, g, b };
+              }
+            }
+          }
+
+          let finalRgb;
+          if (bestRgb) {
+            finalRgb = bestRgb;
+          } else if (validPixelCount > 0) {
+            finalRgb = {
+              r: Math.round(totalR / validPixelCount),
+              g: Math.round(totalG / validPixelCount),
+              b: Math.round(totalB / validPixelCount)
+            };
+          } else {
+            finalRgb = { r: 217, g: 119, b: 6 };
+          }
+
+          applyDynamicTheme(finalRgb.r, finalRgb.g, finalRgb.b);
+
+        } catch (err) {
+          console.warn("Canvas CORS Error, using fallback theme:", err);
+          applyDynamicTheme(217, 119, 6);
+        }
+      };
+
+      if (imgElement.complete && imgElement.naturalWidth !== 0) {
+        analyzePixels();
+      } else {
+        imgElement.onload = analyzePixels;
+        imgElement.onerror = () => applyDynamicTheme(217, 119, 6);
+      }
+    }
+
+    // Apply Computed Dynamic Theme Tokens Across UI
+    function applyDynamicTheme(r, g, b) {
+      const themeRgb = `${r}, ${g}, ${b}`;
+      
+      const glowR = Math.min(255, Math.round(r * 1.25));
+      const glowG = Math.min(255, Math.round(g * 1.25));
+      const glowB = Math.min(255, Math.round(b * 1.25));
+      const glowRgb = `${glowR}, ${glowG}, ${glowB}`;
+
+      const borderR = Math.min(255, Math.round(r * 1.4 + 30));
+      const borderG = Math.min(255, Math.round(g * 1.4 + 30));
+      const borderB = Math.min(255, Math.round(b * 1.4 + 30));
+      const borderRgb = `${borderR}, ${borderG}, ${borderB}`;
+
+      document.documentElement.style.setProperty('--theme-rgb', themeRgb);
+      document.documentElement.style.setProperty('--glow-rgb', glowRgb);
+      document.documentElement.style.setProperty('--theme-border-rgb', borderRgb);
+
+      colorExtractBadge.textContent = `Canvas Extract: RGB(${r},${g},${b})`;
+      renderPlaylistDrawer(); // Refresh drawer highlights
+    }
+
+    // STRICT TRACK SWITCHING WITH COMPLETE 0:00 PROGRESS RESET
+    function loadTrack(index, autoPlay = false) {
+      currentTrackIndex = index;
+      const track = playlist[index];
+
+      // 1. FORCIBLY PAUSE & RESET AUDIO PROGRESS TO 0:00
+      audio.pause();
+      audio.currentTime = 0;
+
+      // 2. IMMEDIATE RESET OF PROGRESS BAR & TIME UI
+      progressLayer.style.width = '0%';
+      timeCurr.textContent = '0:00';
+
+      // 3. Metadata Fade Animation
+      const metaEls = [mainTitle, mainArtist, topTrackInfo, pillTitle, pillArtist];
+      metaEls.forEach(el => el.classList.add('opacity-0', '-translate-y-1'));
+      mainCover.classList.add('opacity-0');
+      pillCover.classList.add('opacity-0');
+
+      setTimeout(() => {
+        audio.src = track.src;
+        audio.currentTime = 0; // Double ensure 0s offset
+
+        mainTitle.textContent = track.title;
+        mainArtist.textContent = track.artist;
+        topTrackInfo.textContent = `${track.shortArtist} - ${track.title}`;
+        mainCover.src = track.cover;
+        pillCover.src = track.cover;
+        pillTitle.textContent = track.shortTitle;
+        pillArtist.textContent = track.shortArtist;
+
+        bgBlur.style.backgroundImage = `url('${track.cover}')`;
+        timeTotal.textContent = formatTime(track.duration);
+
+        // Run Canvas Dynamic Theme Extractor
+        extractColorFromCanvas(mainCover);
+
+        // Render Lyrics & Reset Scroll Position
+        renderLyrics(track.lyrics);
+        lyricsContainer.scrollTop = 0;
+
+        // Fade Metadata back in
+        metaEls.forEach(el => el.classList.remove('opacity-0', '-translate-y-1'));
+        mainCover.classList.remove('opacity-0');
+        pillCover.classList.remove('opacity-0');
+
+        renderPlaylistDrawer();
+
+        if (autoPlay || isPlaying) {
+          playAudio();
+        } else {
+          updatePlaybackUIState(false);
+        }
+      }, 150);
+    }
+
+    function switchTrack(idx) {
+      if (idx === currentTrackIndex && isPlaying) {
+        audio.currentTime = 0;
+        return;
+      }
+      loadTrack(idx, true);
+    }
+
+    // Render Left-Aligned Lyrics
+    function renderLyrics(lyrics) {
+      lyricsContainer.innerHTML = '';
+      lyrics.forEach((item, idx) => {
+        const row = document.createElement('div');
+        row.className = `lyric-row cursor-pointer transition-all duration-300 opacity-30 hover:opacity-70 text-left`;
+        row.dataset.index = idx;
+        row.dataset.time = item.time;
+
+        row.innerHTML = `
+          <div class="lyric-main text-xl md:text-2xl font-semibold text-white/40 leading-snug transition-all duration-300">${item.text}</div>
+          <div class="lyric-trans text-sm font-normal text-white/20 mt-1 ${showTranslations ? '' : 'hidden'}">${item.trans}</div>
+        `;
+
+        row.addEventListener('click', () => {
+          audio.currentTime = item.time;
+          if (!isPlaying) playAudio();
+        });
+
+        lyricsContainer.appendChild(row);
+      });
+    }
+
+    // INTERACTIVE PLAYLIST DRAWER RENDERING
+    function renderPlaylistDrawer() {
+      playlistCount.textContent = playlist.length;
+      playlistItemsContainer.innerHTML = '';
+
+      playlist.forEach((track, idx) => {
+        const isActive = idx === currentTrackIndex;
+        const card = document.createElement('div');
+        
+        card.className = `playlist-card flex items-center justify-between p-2 rounded-xl cursor-pointer border border-transparent transition-all duration-300 ${
+          isActive ? 'playlist-item-active text-white shadow-md' : 'hover:bg-white/10 text-slate-300 hover:text-white'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center space-x-3 truncate">
+            <!-- Cover Thumbnail -->
+            <div class="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/10">
+              <img src="${track.cover}" alt="Cover" class="w-full h-full object-cover">
+              ${isActive && isPlaying ? `
+                <div class="absolute inset-0 bg-black/40 flex items-center justify-center space-x-0.5 px-1">
+                  <span class="w-1 bg-amber-400 rounded-full animate-eq-bar-1"></span>
+                  <span class="w-1 bg-amber-300 rounded-full animate-eq-bar-2"></span>
+                  <span class="w-1 bg-amber-400 rounded-full animate-eq-bar-3"></span>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Title & Artist -->
+            <div class="truncate leading-snug text-left">
+              <div class="text-xs font-bold truncate ${isActive ? 'text-white' : 'text-slate-200'}">${track.title}</div>
+              <div class="text-[10px] text-slate-400 truncate">${track.artist}</div>
+            </div>
+          </div>
+
+          <!-- Duration / Active Indicator -->
+          <div class="flex items-center space-x-2 pl-2 flex-shrink-0">
+            ${isActive ? `
+              <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full" style="background: rgba(var(--theme-border-rgb), 0.2); color: rgb(var(--theme-border-rgb));">播放中</span>
+            ` : `
+              <span class="text-[11px] font-mono text-slate-400">${formatTime(track.duration)}</span>
+            `}
+          </div>
+        `;
+
+        card.addEventListener('click', () => {
+          switchTrack(idx);
+        });
+
+        playlistItemsContainer.appendChild(card);
+      });
+    }
+
+    // Toggle Playlist Drawer Visibility
+    function togglePlaylistDrawer() {
+      isPlaylistOpen = !isPlaylistOpen;
+      if (isPlaylistOpen) {
+        renderPlaylistDrawer();
+        playlistDrawer.classList.remove('opacity-0', 'translate-y-6', 'pointer-events-none');
+        playlistDrawer.classList.add('opacity-100', 'translate-y-0', 'pointer-events-auto');
+      } else {
+        playlistDrawer.classList.remove('opacity-100', 'translate-y-0', 'pointer-events-auto');
+        playlistDrawer.classList.add('opacity-0', 'translate-y-6', 'pointer-events-none');
+      }
+    }
+
+    btnPlaylistToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      togglePlaylistDrawer();
+    });
+
+    closePlaylist.addEventListener('click', () => {
+      isPlaylistOpen = true;
+      togglePlaylistDrawer();
+    });
+
+    // Close drawer when clicking outside
+    document.addEventListener('click', (e) => {
+      if (isPlaylistOpen && !playlistDrawer.contains(e.target) && !btnPlaylistToggle.contains(e.target)) {
+        isPlaylistOpen = true;
+        togglePlaylistDrawer();
+      }
+    });
+
+    // Update Playback UI State
+    function updatePlaybackUIState(playing) {
+      isPlaying = playing;
+
+      if (playing) {
+        playIcon.className = "fa-solid fa-pause text-sm";
+        coverWrapper.classList.add('scale-105', 'dynamic-cover-glow', 'animate-cover-float');
+        coverGlowBg.classList.remove('opacity-40');
+        coverGlowBg.classList.add('opacity-90', 'scale-110');
+      } else {
+        playIcon.className = "fa-solid fa-play text-sm ml-0.5";
+        coverWrapper.classList.remove('scale-105', 'dynamic-cover-glow', 'animate-cover-float');
+        coverGlowBg.classList.remove('opacity-90', 'scale-110');
+        coverGlowBg.classList.add('opacity-40');
+      }
+
+      renderPlaylistDrawer();
+    }
+
+    function playAudio() {
+      audio.play().then(() => updatePlaybackUIState(true)).catch(() => updatePlaybackUIState(true));
+    }
+
+    function pauseAudio() {
+      audio.pause();
+      updatePlaybackUIState(false);
+    }
+
+    btnPlay.addEventListener('click', () => {
+      if (isPlaying) pauseAudio(); else playAudio();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      const prevIdx = (currentTrackIndex - 1 + playlist.length) % playlist.length;
+      switchTrack(prevIdx);
+    });
+
+    btnNext.addEventListener('click', () => {
+      const nextIdx = (currentTrackIndex + 1) % playlist.length;
+      switchTrack(nextIdx);
+    });
+
+    // Audio Progress Updates
+    audio.addEventListener('timeupdate', () => {
+      if (isSeeking) return;
+      const current = audio.currentTime;
+      const total = audio.duration || playlist[currentTrackIndex].duration;
+      const percent = total > 0 ? (current / total) * 100 : 0;
+
+      progressLayer.style.width = `${percent}%`;
+      timeCurr.textContent = formatTime(current);
+
+      updateActiveLyric(current);
+    });
+
+    audio.addEventListener('ended', () => {
+      const nextIdx = (currentTrackIndex + 1) % playlist.length;
+      switchTrack(nextIdx);
+    });
+
+    // 50% VERTICAL CENTERED LYRICS AUTO-SCROLL
+    function updateActiveLyric(currentTime) {
+      const lyrics = playlist[currentTrackIndex].lyrics;
+      let activeIndex = -1;
+
+      for (let i = 0; i < lyrics.length; i++) {
+        if (currentTime >= lyrics[i].time) {
+          activeIndex = i;
+        } else {
+          break;
+        }
+      }
+
+      const rows = lyricsContainer.querySelectorAll('.lyric-row');
+      rows.forEach((row, idx) => {
+        const mainTxt = row.querySelector('.lyric-main');
+        const transTxt = row.querySelector('.lyric-trans');
+
+        if (idx === activeIndex) {
+          row.classList.remove('opacity-30');
+          row.classList.add('opacity-100');
+
+          mainTxt.className = 'lyric-main text-3xl md:text-4xl font-extrabold text-white active-lyric-glow leading-snug transition-all duration-300';
+          if (transTxt) {
+            transTxt.className = 'lyric-trans text-base md:text-lg font-medium text-amber-200/90 mt-1.5 transition-all duration-300';
+          }
+
+          // Exact vertical 50% viewport center scroll
+          const targetScroll = row.offsetTop - (lyricsContainer.clientHeight / 2) + (row.clientHeight / 2);
+          lyricsContainer.scrollTo({
+            top: Math.max(0, targetScroll),
+            behavior: 'smooth'
+          });
+
+        } else {
+          row.classList.remove('opacity-100');
+          row.classList.add('opacity-30');
+
+          mainTxt.className = 'lyric-main text-xl md:text-2xl font-semibold text-white/40 leading-snug transition-all duration-300';
+          if (transTxt) {
+            transTxt.className = 'lyric-trans text-sm font-normal text-white/20 mt-1 transition-all duration-300';
+          }
+        }
+      });
+    }
+
+    // Fused Progress Dock Seek Controls
+    function calculateSeekTime(e) {
+      const rect = fusedDock.getBoundingClientRect();
+      let clickX = e.clientX - rect.left;
+      if (clickX < 0) clickX = 0;
+      if (clickX > rect.width) clickX = rect.width;
+
+      const pct = clickX / rect.width;
+      const total = audio.duration || playlist[currentTrackIndex].duration;
+      return { pct, targetTime: pct * total, clickX };
+    }
+
+    fusedDock.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button') || e.target.closest('input') || e.target.closest('#vol-container') || e.target.closest('#playlist-drawer')) return;
+      isSeeking = true;
+      const { pct, targetTime } = calculateSeekTime(e);
+      progressLayer.style.width = `${pct * 100}%`;
+      timeCurr.textContent = formatTime(targetTime);
+      audio.currentTime = targetTime;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = fusedDock.getBoundingClientRect();
+      if (e.clientY >= rect.top && e.clientY <= rect.bottom && e.clientX >= rect.left && e.clientX <= rect.right) {
+        const { targetTime, clickX } = calculateSeekTime(e);
+        hoverGuide.style.left = `${clickX}px`;
+        hoverGuide.style.opacity = '1';
+
+        hoverTooltip.style.left = `${clickX}px`;
+        hoverTooltip.textContent = formatTime(targetTime);
+        hoverTooltip.style.opacity = '1';
+      } else {
+        hoverGuide.style.opacity = '0';
+        hoverTooltip.style.opacity = '0';
+      }
+
+      if (isSeeking) {
+        const { pct, targetTime } = calculateSeekTime(e);
+        progressLayer.style.width = `${pct * 100}%`;
+        timeCurr.textContent = formatTime(targetTime);
+        audio.currentTime = targetTime;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isSeeking) isSeeking = false;
+    });
+
+    // SINGLE HORIZONTAL VOLUME CONTROLLER
+    function setVolume(val) {
+      val = Math.max(0, Math.min(1, val));
+      audio.volume = val;
+      volSlider.value = val;
+
+      const pct = Math.round(val * 100);
+      volSlider.style.background = `linear-gradient(to right, #ffffff ${pct}%, rgba(255, 255, 255, 0.2) ${pct}%)`;
+
+      if (val === 0) {
+        volIcon.className = "fa-solid fa-volume-xmark text-rose-400";
+      } else if (val < 0.4) {
+        volIcon.className = "fa-solid fa-volume-low text-slate-300";
+      } else {
+        volIcon.className = "fa-solid fa-volume-high text-slate-200";
+      }
+    }
+
+    volSlider.addEventListener('input', (e) => setVolume(parseFloat(e.target.value)));
+
+    volContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      setVolume(audio.volume + delta);
+    }, { passive: false });
+
+    btnVol.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (audio.volume > 0) {
+        previousVolume = audio.volume;
+        setVolume(0);
+      } else {
+        setVolume(previousVolume > 0 ? previousVolume : 0.8);
+      }
+    });
+
+    // Subtitle Translation Toggle
+    topTransToggle.addEventListener('click', () => {
+      showTranslations = !showTranslations;
+      document.querySelectorAll('.lyric-trans').forEach(el => {
+        el.classList.toggle('hidden', !showTranslations);
+      });
+    });
+
+    // Favorite Button Toggle
+    btnFav.addEventListener('click', () => {
+      btnFav.classList.toggle('text-rose-500');
+      btnFav.classList.toggle('text-slate-400');
+    });
+
+    // Custom Cover Extraction Modal Logic
+    btnCustomCover.addEventListener('click', () => {
+      coverModal.classList.remove('hidden');
+      setTimeout(() => coverModal.classList.remove('opacity-0'), 10);
+    });
+
+    closeModal.addEventListener('click', () => {
+      coverModal.classList.add('opacity-0');
+      setTimeout(() => coverModal.classList.add('hidden'), 300);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const customSrc = event.target.result;
+        applyCustomCoverImage(customSrc, "自定图片文件", "本地上传封面");
+      };
+      reader.readAsDataURL(file);
+    });
+
+    btnApplyUrl.addEventListener('click', () => {
+      const url = urlInput.value.trim();
+      if (!url) return;
+      applyCustomCoverImage(url, "自定网络图片", "URL 封面");
+    });
+
+    function applyCustomCoverImage(imgSrc, title, artist) {
+      audio.pause();
+      audio.currentTime = 0;
+      progressLayer.style.width = '0%';
+      timeCurr.textContent = '0:00';
+
+      mainCover.src = imgSrc;
+      pillCover.src = imgSrc;
+      bgBlur.style.backgroundImage = `url('${imgSrc}')`;
+
+      mainTitle.textContent = title;
+      mainArtist.textContent = artist;
+
+      extractColorFromCanvas(mainCover);
+
+      coverModal.classList.add('opacity-0');
+      setTimeout(() => coverModal.classList.add('hidden'), 300);
+    }
+
+    function formatTime(seconds) {
+      if (isNaN(seconds) || seconds < 0) return "0:00";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+    }
+
+    // Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (isPlaying) pauseAudio(); else playAudio();
+      } else if (e.code === 'ArrowRight') {
+        btnNext.click();
+      } else if (e.code === 'ArrowLeft') {
+        btnPrev.click();
+      }
+    });
+
+    // Initial Load
+    window.addEventListener('load', () => {
+      loadTrack(0, false);
+      setVolume(0.8);
+    });
+  </script>
+</body>
+</html>

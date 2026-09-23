@@ -1,0 +1,279 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dynamic_color/dynamic_color.dart';
+import 'l10n/app_localizations.dart';
+import 'theme/theme.dart';
+import 'player/player.dart';
+import 'screens/screens.dart';
+import 'api/api.dart';
+
+class MusicPlayerApp extends StatefulWidget {
+  const MusicPlayerApp({super.key});
+
+  @override
+  State<MusicPlayerApp> createState() => _MusicPlayerAppState();
+}
+
+class _MusicPlayerAppState extends State<MusicPlayerApp> {
+  MusicRepository? _repository;
+  bool _isInitialized = false;
+  ThemeMode _themeMode = ThemeMode.system;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeRepository();
+  }
+
+  Future<void> _initializeRepository() async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    final themeModeIndex = prefs.getInt('theme_mode') ?? 0;
+    _themeMode = ThemeMode.values[themeModeIndex.clamp(0, 2)];
+
+    final serverUrl = prefs.getString('server_url');
+    final username = prefs.getString('username');
+    final password = prefs.getString('password');
+    final apiKey = prefs.getString('api_key');
+    
+    if (serverUrl != null && serverUrl.isNotEmpty) {
+      final SubsonicAuth auth;
+      if (apiKey != null && apiKey.isNotEmpty) {
+        auth = SubsonicAuth(username: 'unused', apiKey: apiKey);
+      } else if (username != null && password != null && 
+          username.isNotEmpty && password.isNotEmpty) {
+        auth = SubsonicAuth(username: username, password: password);
+      } else {
+        setState(() { _isInitialized = true; });
+        return;
+      }
+      final client = SubsonicClient(baseUrl: serverUrl, auth: auth);
+      _repository = MusicRepository(client);
+    }
+    setState(() {
+      _isInitialized = true;
+    });
+  }
+
+  void _updateRepository(String serverUrl, String username, String password) {
+    final auth = SubsonicAuth(username: username, password: password);
+    final client = SubsonicClient(baseUrl: serverUrl, auth: auth);
+    setState(() {
+      _repository = MusicRepository(client);
+    });
+  }
+
+  void _clearRepository() {
+    setState(() {
+      _repository = null;
+    });
+  }
+
+  void setThemeMode(ThemeMode mode) async {
+    setState(() { _themeMode = mode; });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('theme_mode', mode.index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_isInitialized) {
+      return const MaterialApp(
+        home: Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PlayerState()),
+        ChangeNotifierProvider(
+          create: (context) {
+            final state = context.read<PlayerState>();
+            final controller = PlayerController(state: state);
+            if (_repository != null) {
+              controller.setRepository(_repository!);
+            }
+            return controller;
+          },
+        ),
+        if (_repository != null)
+          Provider<MusicRepository>.value(value: _repository!),
+        Provider<Function(String, String, String)>.value(value: _updateRepository),
+        Provider<Function()>.value(value: _clearRepository),
+        Provider<Function(ThemeMode)>.value(value: setThemeMode),
+        Provider<ThemeMode>.value(value: _themeMode),
+      ],
+      child: DynamicColorBuilder(
+        builder: (lightDynamic, darkDynamic) {
+          final lightScheme = lightDynamic ?? ColorScheme.fromSeed(
+            seedColor: AppTheme.lightTheme.colorScheme.primary,
+            brightness: Brightness.light,
+          );
+          final darkScheme = darkDynamic ?? ColorScheme.fromSeed(
+            seedColor: AppTheme.darkTheme.colorScheme.primary,
+            brightness: Brightness.dark,
+          );
+
+          final effectiveLight = AppTheme.lightTheme.copyWith(
+            colorScheme: lightScheme,
+            navigationBarTheme: AppTheme.lightTheme.navigationBarTheme.copyWith(
+              indicatorColor: lightScheme.primary.withValues(alpha: 0.12),
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return TextStyle(color: lightScheme.primary, fontSize: 12, fontWeight: FontWeight.w500);
+                }
+                return TextStyle(color: lightScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500);
+              }),
+            ),
+            sliderTheme: AppTheme.lightTheme.sliderTheme.copyWith(
+              activeTrackColor: lightScheme.primary,
+              thumbColor: lightScheme.primary,
+              overlayColor: lightScheme.primary.withValues(alpha: 0.12),
+              valueIndicatorColor: lightScheme.primary,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: lightScheme.primary,
+                foregroundColor: lightScheme.onPrimary,
+              ),
+            ),
+          );
+
+          final effectiveDark = AppTheme.darkTheme.copyWith(
+            colorScheme: darkScheme,
+            navigationBarTheme: AppTheme.darkTheme.navigationBarTheme.copyWith(
+              indicatorColor: darkScheme.primary.withValues(alpha: 0.15),
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return TextStyle(color: darkScheme.primary, fontSize: 12, fontWeight: FontWeight.w500);
+                }
+                return TextStyle(color: darkScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500);
+              }),
+            ),
+            sliderTheme: AppTheme.darkTheme.sliderTheme.copyWith(
+              activeTrackColor: darkScheme.primary,
+              thumbColor: darkScheme.primary,
+              overlayColor: darkScheme.primary.withValues(alpha: 0.15),
+              valueIndicatorColor: darkScheme.primary,
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: darkScheme.primary,
+                foregroundColor: darkScheme.onPrimary,
+              ),
+            ),
+          );
+
+          return MaterialApp(
+            title: 'Flutter Music Player',
+            debugShowCheckedModeBanner: false,
+            themeMode: _themeMode,
+            theme: effectiveLight,
+            darkTheme: effectiveDark,
+            themeAnimationDuration: Duration.zero,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('zh'),
+            ],
+            home: Consumer<PlayerState>(
+              builder: (context, playerState, _) {
+                final color = playerState.themeColor;
+                final brightness = Theme.of(context).brightness;
+
+                if (color == null) return const MainNavigation();
+
+                final seedScheme = ColorScheme.fromSeed(
+                  seedColor: color,
+                  brightness: brightness,
+                );
+
+                final themed = (brightness == Brightness.light
+                        ? AppTheme.lightTheme
+                        : AppTheme.darkTheme)
+                    .copyWith(colorScheme: seedScheme);
+
+                return Theme(
+                  data: themed,
+                  child: const MainNavigation(),
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class MainNavigation extends StatefulWidget {
+  const MainNavigation({super.key});
+
+  @override
+  State<MainNavigation> createState() => _MainNavigationState();
+}
+
+class _MainNavigationState extends State<MainNavigation> {
+  int _currentIndex = 0;
+  
+  final List<Widget> _screens = const [
+    PlayerScreen(),
+    LibraryScreen(),
+    SettingsScreen(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final loc = AppLocalizations.of(context)!;
+
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        height: 70,
+        backgroundColor: colorScheme.surface,
+        indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return TextStyle(color: colorScheme.primary, fontSize: 12, fontWeight: FontWeight.w500);
+          }
+          return TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500);
+        }),
+        destinations: [
+          NavigationDestination(
+            icon: Icon(Icons.music_note_outlined, size: 24, color: colorScheme.onSurfaceVariant),
+            selectedIcon: Icon(Icons.music_note, size: 24, color: colorScheme.primary),
+            label: loc.playerTab,
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.library_music_outlined, size: 24, color: colorScheme.onSurfaceVariant),
+            selectedIcon: Icon(Icons.library_music, size: 24, color: colorScheme.primary),
+            label: loc.libraryTab,
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined, size: 24, color: colorScheme.onSurfaceVariant),
+            selectedIcon: Icon(Icons.settings, size: 24, color: colorScheme.primary),
+            label: loc.settingsTab,
+          ),
+        ],
+      ),
+    );
+  }
+}

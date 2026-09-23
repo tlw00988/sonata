@@ -1,0 +1,189 @@
+{
+  "@@locale": "en",
+  "appTitle": "Flutter Music Player",
+
+  "playerTab": "Player",
+  "libraryTab": "Library",
+  "settingsTab": "Settings",
+
+  "libraryTitle": "Library",
+  "songsTab": "Songs",
+  "albumsTab": "Albums",
+  "artistsTab": "Artists",
+  "playlistsTab": "Playlists",
+  "localFilesTab": "Local Files",
+
+  "noSongs": "No songs",
+  "noSongsHint": "Your songs will appear here",
+  "noAlbums": "No albums",
+  "noAlbumsHint": "Your albums will appear here",
+  "noArtists": "No artists",
+  "noArtistsHint": "Your artists will appear here",
+  "noPlaylists": "No playlists",
+  "noPlaylistsHint": "Your playlists will appear here",
+  "createPlaylist": "Create Playlist",
+  "noLocalFiles": "No local files",
+  "scanning": "Scanning...",
+  "scanLocalHint": "Scan music folders or pick files",
+  "scanDefaultFolders": "Scan Default Folders",
+  "pickFolder": "Pick Folder",
+  "localTracksCount": "{count} local tracks",
+  "@localTracksCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "scanFolder": "Scan folder",
+  "addAudioFiles": "Add audio files",
+  "rescan": "Rescan",
+  "loadingLibrary": "Loading library...",
+  "failedToLoadLibrary": "Failed to load library: {error}",
+  "@failedToLoadLibrary": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "failedToScanLocalFiles": "Failed to scan local files: {error}",
+  "@failedToScanLocalFiles": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "selectFolderToScan": "Select folder to scan",
+  "failedToScanFolder": "Failed to scan folder: {error}",
+  "@failedToScanFolder": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "failedToPickFiles": "Failed to pick files: {error}",
+  "@failedToPickFiles": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "addedToQueue": "Added \"{title}\" to queue",
+  "@addedToQueue": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "searchHint": "Search for songs, albums, artists...",
+  "notConnected": "Not connected to server",
+  "searchFailed": "Search failed: {error}",
+  "@searchFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noResultsFor": "No results for \"{query}\"",
+  "@noResultsFor": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "albumsCount": "{albumCount} albums",
+  "@albumsCount": {
+    "placeholders": {
+      "albumCount": {"type": "int"}
+    }
+  },
+  "songsCount": "{songCount} songs",
+  "@songsCount": {
+    "placeholders": {
+      "songCount": {"type": "int"}
+    }
+  },
+  "artistStats": "{albumCount} albums • {songCount} songs",
+  "@artistStats": {
+    "placeholders": {
+      "albumCount": {"type": "int"},
+      "songCount": {"type": "int"}
+    }
+  },
+  "play": "Play",
+  "addToQueue": "Add to Queue",
+  "noTracksFound": "No tracks found",
+  "addedTracksToQueue": "Added {count} tracks to queue",
+  "@addedTracksToQueue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noAlbumsFound": "No albums found",
+  "playlistStats": "{songCount} songs • {duration}",
+  "@playlistStats": {
+    "placeholders": {
+      "songCount": {"type": "int"},
+      "duration": {"type": "String"}
+    }
+  },
+  "unknownArtist": "Unknown Artist",
+  "unknownAlbum": "Unknown Album",
+  "localFiles": "Local Files",
+
+  "noTrackPlaying": "No track playing",
+  "selectTrackToPlay": "Select a track to play",
+  "noTrack": "No Track",
+  "noLyricsAvailable": "No lyrics available",
+  "playbackError": "Playback error",
+
+  "queueEmpty": "Queue is empty",
+  "addTracksToStart": "Add tracks to start playing",
+  "upNextCount": "Up Next ({count})",
+  "@upNextCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "clearQueue": "Clear queue",
+  "closeQueue": "Close queue",
+  "removeFromQueue": "Remove from queue",
+  "tracksRemaining": "{count} remaining tracks",
+  "@tracksRemaining": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "removeFromFavorites": "Remove from favorites",
+  "addToFavorites": "Add to favorites",
+
+  "settingsTitle": "Settings",
+  "navidromeSection": "Navidrome / OpenSubsonic",
+  "serverUrl": "Server URL",
+  "serverUrlHint": "https://your-navidrome.example.com",
+  "username": "Username",
+  "usernameHint": "Enter your username",
+  "password": "Password",
+  "passwordHint": "Enter your password",
+  "apiKey": "API Key (optional)",
+  "apiKeyHint": "Or enter API key from Navidrome settings",
+  "enterApiKeyOrCredentials": "Enter API key or username + password",
+  "connectionFailed": "Connection failed - check credentials",
+  "connectionError": "Error: {error}",
+  "@connectionError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "connectedTo": "Connected to {url}",
+  "@connectedTo": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "testing": "Testing...",
+  "testConnection": "Test Connection",
+  "disconnect": "Disconnect",
+  "appearance": "Appearance",
+  "about": "About",
+  "version": "Version",
+  "licenses": "Licenses",
+  "openSourceLicenses": "Open source licenses",
+  "systemTheme": "System",
+  "systemThemeHint": "Follow device setting",
+  "lightTheme": "Light",
+  "lightThemeHint": "Always light",
+  "darkTheme": "Dark",
+  "darkThemeHint": "Always dark"
+}

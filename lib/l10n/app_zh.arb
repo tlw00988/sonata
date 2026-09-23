@@ -1,0 +1,189 @@
+{
+  "@@locale": "zh",
+  "appTitle": "Flutter 音乐播放器",
+
+  "playerTab": "播放器",
+  "libraryTab": "音乐库",
+  "settingsTab": "设置",
+
+  "libraryTitle": "音乐库",
+  "songsTab": "歌曲",
+  "albumsTab": "专辑",
+  "artistsTab": "艺术家",
+  "playlistsTab": "播放列表",
+  "localFilesTab": "本地文件",
+
+  "noSongs": "暂无歌曲",
+  "noSongsHint": "歌曲将显示在这里",
+  "noAlbums": "暂无专辑",
+  "noAlbumsHint": "专辑将显示在这里",
+  "noArtists": "暂无艺术家",
+  "noArtistsHint": "艺术家将显示在这里",
+  "noPlaylists": "暂无播放列表",
+  "noPlaylistsHint": "播放列表将显示在这里",
+  "createPlaylist": "创建播放列表",
+  "noLocalFiles": "暂无本地文件",
+  "scanning": "扫描中...",
+  "scanLocalHint": "扫描音乐文件夹或选择文件",
+  "scanDefaultFolders": "扫描默认文件夹",
+  "pickFolder": "选择文件夹",
+  "localTracksCount": "{count} 首本地歌曲",
+  "@localTracksCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "scanFolder": "扫描文件夹",
+  "addAudioFiles": "添加音频文件",
+  "rescan": "重新扫描",
+  "loadingLibrary": "加载音乐库中...",
+  "failedToLoadLibrary": "加载音乐库失败：{error}",
+  "@failedToLoadLibrary": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "failedToScanLocalFiles": "扫描本地文件失败：{error}",
+  "@failedToScanLocalFiles": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "selectFolderToScan": "选择要扫描的文件夹",
+  "failedToScanFolder": "扫描文件夹失败：{error}",
+  "@failedToScanFolder": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "failedToPickFiles": "选择文件失败：{error}",
+  "@failedToPickFiles": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "addedToQueue": "已将「{title}」添加到播放队列",
+  "@addedToQueue": {
+    "placeholders": {
+      "title": {"type": "String"}
+    }
+  },
+  "searchHint": "搜索歌曲、专辑、艺术家...",
+  "notConnected": "未连接到服务器",
+  "searchFailed": "搜索失败：{error}",
+  "@searchFailed": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "noResultsFor": "未找到「{query}」的结果",
+  "@noResultsFor": {
+    "placeholders": {
+      "query": {"type": "String"}
+    }
+  },
+  "albumsCount": "{albumCount} 张专辑",
+  "@albumsCount": {
+    "placeholders": {
+      "albumCount": {"type": "int"}
+    }
+  },
+  "songsCount": "{songCount} 首歌曲",
+  "@songsCount": {
+    "placeholders": {
+      "songCount": {"type": "int"}
+    }
+  },
+  "artistStats": "{albumCount} 张专辑 • {songCount} 首歌曲",
+  "@artistStats": {
+    "placeholders": {
+      "albumCount": {"type": "int"},
+      "songCount": {"type": "int"}
+    }
+  },
+  "play": "播放",
+  "addToQueue": "添加到队列",
+  "noTracksFound": "未找到歌曲",
+  "addedTracksToQueue": "已添加 {count} 首歌曲到队列",
+  "@addedTracksToQueue": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "noAlbumsFound": "未找到专辑",
+  "playlistStats": "{songCount} 首歌曲 • {duration}",
+  "@playlistStats": {
+    "placeholders": {
+      "songCount": {"type": "int"},
+      "duration": {"type": "String"}
+    }
+  },
+  "unknownArtist": "未知艺术家",
+  "unknownAlbum": "未知专辑",
+  "localFiles": "本地文件",
+
+  "noTrackPlaying": "未在播放",
+  "selectTrackToPlay": "选择一首歌曲开始播放",
+  "noTrack": "未在播放",
+  "noLyricsAvailable": "暂无歌词",
+  "playbackError": "播放出错",
+
+  "queueEmpty": "播放队列为空",
+  "addTracksToStart": "添加歌曲开始播放",
+  "upNextCount": "即将播放 ({count})",
+  "@upNextCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "clearQueue": "清空队列",
+  "closeQueue": "关闭队列",
+  "removeFromQueue": "从队列中移除",
+  "tracksRemaining": "还有 {count} 首歌曲",
+  "@tracksRemaining": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "removeFromFavorites": "取消收藏",
+  "addToFavorites": "收藏",
+
+  "settingsTitle": "设置",
+  "navidromeSection": "Navidrome / OpenSubsonic",
+  "serverUrl": "服务器地址",
+  "serverUrlHint": "https://your-navidrome.example.com",
+  "username": "用户名",
+  "usernameHint": "输入用户名",
+  "password": "密码",
+  "passwordHint": "输入密码",
+  "apiKey": "API 密钥（可选）",
+  "apiKeyHint": "或在 Navidrome 设置中获取 API 密钥",
+  "enterApiKeyOrCredentials": "请输入 API 密钥或用户名和密码",
+  "connectionFailed": "连接失败 - 请检查凭据",
+  "connectionError": "错误：{error}",
+  "@connectionError": {
+    "placeholders": {
+      "error": {"type": "String"}
+    }
+  },
+  "connectedTo": "已连接到 {url}",
+  "@connectedTo": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "testing": "测试中...",
+  "testConnection": "测试连接",
+  "disconnect": "断开连接",
+  "appearance": "外观",
+  "about": "关于",
+  "version": "版本",
+  "licenses": "开源许可",
+  "openSourceLicenses": "开源许可信息",
+  "systemTheme": "跟随系统",
+  "systemThemeHint": "跟随设备设置",
+  "lightTheme": "浅色模式",
+  "lightThemeHint": "始终使用浅色",
+  "darkTheme": "深色模式",
+  "darkThemeHint": "始终使用深色"
+}
