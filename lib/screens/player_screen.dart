@@ -4,19 +4,8 @@ import 'package:provider/provider.dart';
 import '../player/player.dart';
 import '../widgets/widgets.dart';
 import '../models/models.dart';
-import '../api/repository.dart';
+import '../api/api.dart';
 import '../l10n/app_localizations.dart';
-
-String _resolveCoverArt(BuildContext context, String coverArtId) {
-  if (coverArtId.startsWith('http://') || coverArtId.startsWith('https://')) {
-    return coverArtId;
-  }
-  try {
-    return context.read<MusicRepository>().getCoverArtUrl(coverArtId);
-  } catch (_) {
-    return coverArtId;
-  }
-}
 
 class PlayerScreen extends StatefulWidget {
   const PlayerScreen({super.key});
@@ -137,10 +126,12 @@ class _PlayerScreenState extends State<PlayerScreen>
           child: Stack(
             children: [
               // Blurred cover background
-              if (track != null && track.coverArt.isNotEmpty)
+              if (track != null &&
+                  track.coverArt.isNotEmpty &&
+                  coverImageProvider(context, track.coverArt) != null)
                 Positioned.fill(
                   child: Image(
-                    image: NetworkImage(_resolveCoverArt(context, track.coverArt)),
+                    image: coverImageProvider(context, track.coverArt)!,
                     fit: BoxFit.cover,
                     alignment: Alignment.center,
                     errorBuilder: (ctx, err, st) => const SizedBox(),
@@ -153,11 +144,13 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
               ),
               // Gaussian blur
-              if (track != null && track.coverArt.isNotEmpty)
+              if (track != null &&
+                  track.coverArt.isNotEmpty &&
+                  coverImageProvider(context, track.coverArt) != null)
                 Positioned.fill(
                   child: ClipRect(
                     child: Image(
-                      image: NetworkImage(_resolveCoverArt(context, track.coverArt)),
+                      image: coverImageProvider(context, track.coverArt)!,
                       fit: BoxFit.cover,
                       alignment: Alignment.center,
                       filterQuality: FilterQuality.low,

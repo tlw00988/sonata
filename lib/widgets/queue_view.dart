@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../player/player.dart';
 import '../models/models.dart';
-import '../api/repository.dart';
+import '../api/api.dart';
 import '../l10n/app_localizations.dart';
 
 class QueueView extends StatelessWidget {
@@ -199,11 +199,10 @@ class _QueueItem extends StatelessWidget {
                   color: colorScheme.surfaceVariant,
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: track.coverArt.isNotEmpty
-                    ? Image.network(
-                        track.coverArt.startsWith('http')
-                            ? track.coverArt
-                            : context.read<MusicRepository>().getCoverArtUrl(track.coverArt),
+                child: track.coverArt.isNotEmpty &&
+                        coverImageProvider(context, track.coverArt) != null
+                    ? Image(
+                        image: coverImageProvider(context, track.coverArt)!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Icon(
                           Icons.music_note,

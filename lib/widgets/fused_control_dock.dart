@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../player/player.dart';
 import '../models/models.dart';
-import '../api/repository.dart';
+import '../api/api.dart';
 import '../l10n/app_localizations.dart';
 
 class FusedControlDock extends StatefulWidget {
@@ -157,31 +156,26 @@ class _FusedControlDockState extends State<FusedControlDock> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (widget.track != null && widget.track!.coverArt.isNotEmpty)
+          if (widget.track != null &&
+              widget.track!.coverArt.isNotEmpty &&
+              coverImageProvider(context, widget.track!.coverArt) != null)
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
-              child: Builder(
-                builder: (context) {
-                  final url = widget.track!.coverArt.startsWith('http')
-                      ? widget.track!.coverArt
-                      : context.read<MusicRepository>().getCoverArtUrl(widget.track!.coverArt);
-                  return Image.network(
-                    url,
-                    width: 30,
-                    height: 30,
-                    fit: BoxFit.cover,
-                    errorBuilder: (ctx, err, st) => Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Icon(Icons.music_note,
-                          color: Colors.white54, size: 16),
-                    ),
-                  );
-                },
+              child: Image(
+                image: coverImageProvider(context, widget.track!.coverArt)!,
+                width: 30,
+                height: 30,
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, st) => Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Icon(Icons.music_note,
+                      color: Colors.white54, size: 16),
+                ),
               ),
             )
           else

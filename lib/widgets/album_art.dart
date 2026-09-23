@@ -1,9 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:palette_generator/palette_generator.dart';
-import 'package:provider/provider.dart';
-import '../api/repository.dart';
+import '../api/api.dart';
 
 class AlbumArt extends StatelessWidget {
   final String? imageUrl;
@@ -24,16 +25,7 @@ class AlbumArt extends StatelessWidget {
   });
 
   String? _resolveUrl(BuildContext context) {
-    if (imageUrl == null || imageUrl!.isEmpty) return null;
-    if (imageUrl!.startsWith('http://') || imageUrl!.startsWith('https://')) {
-      return imageUrl;
-    }
-    try {
-      final repo = context.read<MusicRepository>();
-      return repo.getCoverArtUrl(imageUrl!);
-    } catch (_) {
-      return imageUrl;
-    }
+    return resolveCoverUrl(context, imageUrl ?? '');
   }
 
   @override
@@ -48,16 +40,27 @@ class AlbumArt extends StatelessWidget {
     return ClipRRect(
       borderRadius: radius,
       child: IgnorePointer(
-        child: CachedNetworkImage(
-          imageUrl: url,
-          width: size,
-          height: size,
-          fit: fit,
-          placeholder: (context, url) => _buildPlaceholder(context, radius),
-          errorWidget: (context, url, error) => _buildError(context, radius),
-          memCacheWidth: size.toInt(),
-          memCacheHeight: size.toInt(),
-        ),
+        child: isLocalCoverPath(url)
+            ? Image.file(
+                url.startsWith('file://')
+                    ? File.fromUri(Uri.parse(url))
+                    : File(url),
+                width: size,
+                height: size,
+                fit: fit,
+                errorBuilder: (context, url, error) =>
+                    _buildError(context, radius),
+              )
+            : CachedNetworkImage(
+                imageUrl: url,
+                width: size,
+                height: size,
+                fit: fit,
+                placeholder: (context, url) => _buildPlaceholder(context, radius),
+                errorWidget: (context, url, error) => _buildError(context, radius),
+                memCacheWidth: size.toInt(),
+                memCacheHeight: size.toInt(),
+              ),
       ),
     );
   }
@@ -156,16 +159,7 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
   }
 
   String _resolveUrl(BuildContext context) {
-    if (widget.imageUrl == null || widget.imageUrl!.isEmpty) return '';
-    if (widget.imageUrl!.startsWith('http://') || widget.imageUrl!.startsWith('https://')) {
-      return widget.imageUrl!;
-    }
-    try {
-      final repo = context.read<MusicRepository>();
-      return repo.getCoverArtUrl(widget.imageUrl!);
-    } catch (_) {
-      return widget.imageUrl!;
-    }
+    return resolveCoverUrl(context, widget.imageUrl ?? '') ?? '';
   }
 
   Future<void> _extractColor() async {
@@ -176,8 +170,16 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
 
     try {
       final resolvedUrl = _resolveUrl(context);
+      if (resolvedUrl.isEmpty) {
+        widget.onColorExtracted?.call(null);
+        return;
+      }
       if (kDebugMode) print('ThemeColor: extracting from $resolvedUrl');
-      final imageProvider = CachedNetworkImageProvider(resolvedUrl);
+      final imageProvider = isLocalCoverPath(resolvedUrl)
+          ? FileImage(resolvedUrl.startsWith('file://')
+              ? File.fromUri(Uri.parse(resolvedUrl))
+              : File(resolvedUrl))
+          : CachedNetworkImageProvider(resolvedUrl) as ImageProvider;
       _paletteGenerator = await PaletteGenerator.fromImageProvider(imageProvider);
       
       Color? extractedColor;

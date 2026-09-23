@@ -71,6 +71,10 @@ class Track {
     return '${minutes}:${seconds.toString().padLeft(2, '0')}';
   }
 
+  /// True when this track plays a file on this device rather than a
+  /// server-side song.
+  bool get isLocal => path.isNotEmpty && id.startsWith('local_');
+
   Track copyWith({
     String? id,
     String? title,

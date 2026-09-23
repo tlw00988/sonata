@@ -86,8 +86,10 @@ class PlayerController extends ChangeNotifier {
   }
 
   String _getCoverArtUrl(Track track) {
-    if (_repository != null && track.coverArt.isNotEmpty &&
-        !track.coverArt.startsWith('http')) {
+    if (track.coverArt.isEmpty) return '';
+    if (track.coverArt.startsWith('http')) return track.coverArt;
+    if (isLocalCoverPath(track.coverArt)) return track.coverArt;
+    if (_repository != null) {
       return _repository!.getCoverArtUrl(track.coverArt, size: 500);
     }
     return track.coverArt;
@@ -121,6 +123,15 @@ class PlayerController extends ChangeNotifier {
   }
 
   Future<void> _fetchLyrics(Track track) async {
+    if (track.isLocal) {
+      try {
+        _state.setLyrics(await loadLocalLyrics(track.path));
+      } catch (e) {
+        _state.setLyrics(null);
+      }
+      return;
+    }
+
     if (_repository != null) {
       try {
         final lyrics = await _repository!.getLyricsBySongId(track.id);

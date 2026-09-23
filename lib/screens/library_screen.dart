@@ -7,12 +7,7 @@ import '../l10n/app_localizations.dart';
 import 'package:file_picker/file_picker.dart';
 
 String _resolveCoverArt(BuildContext context, String id) {
-  if (id.startsWith('http://') || id.startsWith('https://')) return id;
-  try {
-    return context.read<MusicRepository>().getCoverArtUrl(id);
-  } catch (_) {
-    return id;
-  }
+  return resolveCoverUrl(context, id) ?? '';
 }
 
 class LibraryScreen extends StatefulWidget {
@@ -167,18 +162,18 @@ Future<void> _pickAudioFiles() async {
       );
       
       if (files != null && files.files.isNotEmpty) {
-        final tracks = files.files.map((file) => Track(
-          id: 'local_${file.path.hashCode}',
-          title: file.name.replaceAll(RegExp(r'\.[^.]+$'), ''),
-          artist: loc.unknownArtist,
-          album: loc.localFiles,
-          albumId: '',
-          artistId: '',
-          duration: 0,
-          coverArt: '',
-          path: file.path ?? '',
-        )).toList();
-        
+        final tracks = <Track>[];
+        for (final file in files.files) {
+          final path = file.path;
+          if (path == null || path.isEmpty) continue;
+          final track = await _localRepository.trackFromFile(
+            path,
+            unknownArtist: loc.unknownArtist,
+            unknownAlbum: loc.localFiles,
+          );
+          if (track != null) tracks.add(track);
+        }
+
         if (!mounted) return;
         setState(() {
           _localTracks.addAll(tracks);
@@ -794,9 +789,10 @@ class _LibraryTrackTile extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: track.coverArt.isNotEmpty
-                    ? Image.network(
-                        _resolveCoverArt(context, track.coverArt),
+                child: track.coverArt.isNotEmpty &&
+                        coverImageProvider(context, track.coverArt) != null
+                    ? Image(
+                        image: coverImageProvider(context, track.coverArt)!,
                         width: 48,
                         height: 48,
                         fit: BoxFit.cover,

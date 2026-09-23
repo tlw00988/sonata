@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'player_state.dart';
 import '../models/models.dart';
 import '../api/repository.dart';
+import '../api/cover_art.dart';
 
 class MusicAudioHandler extends audio.BaseAudioHandler {
   mk.Player? _player;
@@ -50,15 +51,21 @@ class MusicAudioHandler extends audio.BaseAudioHandler {
   }
 
   Future<void> setTrack(Track track) async {
-    final coverUrl = track.coverArt.startsWith('http')
-        ? track.coverArt
-        : (track.coverArt.isNotEmpty
-            ? (_repository?.getCoverArtUrl(track.coverArt, size: 500) ?? '')
-            : '');
+    final String coverRef;
+    if (track.coverArt.isEmpty) {
+      coverRef = '';
+    } else if (track.coverArt.startsWith('http') ||
+        isLocalCoverPath(track.coverArt)) {
+      coverRef = track.coverArt;
+    } else {
+      coverRef = _repository?.getCoverArtUrl(track.coverArt, size: 500) ?? '';
+    }
 
     Uri? artUri;
-    if (coverUrl.isNotEmpty) {
-      artUri = await _downloadArt(track.id, coverUrl);
+    if (coverRef.isNotEmpty) {
+      artUri = isLocalCoverPath(coverRef)
+          ? _localArtUri(coverRef)
+          : await _downloadArt(track.id, coverRef);
     }
 
     mediaItem.add(audio.MediaItem(
@@ -86,6 +93,18 @@ class MusicAudioHandler extends audio.BaseAudioHandler {
       return Uri.file(file.path);
     } catch (e) {
       return Uri.parse(url);
+    }
+  }
+
+  /// Points the media session at a cover file already on this device.
+  Uri? _localArtUri(String path) {
+    try {
+      final file = path.startsWith('file://')
+          ? File.fromUri(Uri.parse(path))
+          : File(path);
+      return file.existsSync() ? Uri.file(file.path) : null;
+    } catch (e) {
+      return null;
     }
   }
 
