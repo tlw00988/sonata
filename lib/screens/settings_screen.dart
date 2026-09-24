@@ -204,10 +204,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _connectionError = loc.connectionError(e.toString());
       });
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isTesting = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isTesting = false;
+        });
+      }
     }
   }
 
@@ -794,11 +795,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            Radio<ThemeMode>(
-              value: value,
+            RadioGroup<ThemeMode>(
               groupValue: groupValue,
               onChanged: (v) => setThemeMode(v!),
-              activeColor: colorScheme.primary,
+              child: Radio<ThemeMode>(
+                value: value,
+                activeColor: colorScheme.primary,
+              ),
             ),
           ],
         ),

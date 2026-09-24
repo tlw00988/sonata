@@ -68,7 +68,7 @@ class Track {
   String get formattedDuration {
     final minutes = duration ~/ 60;
     final seconds = duration % 60;
-    return '${minutes}:${seconds.toString().padLeft(2, '0')}';
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   /// True when this track plays a file on this device rather than a

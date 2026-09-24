@@ -11,7 +11,6 @@ import '../api/cover_art.dart';
 
 class MusicAudioHandler extends audio.BaseAudioHandler {
   mk.Player? _player;
-  PlayerState? _state;
   MusicRepository? _repository;
   void Function()? _onNext;
   void Function()? _onPrevious;
@@ -32,7 +31,6 @@ class MusicAudioHandler extends audio.BaseAudioHandler {
     _syncTimer?.cancel();
 
     _player = player;
-    _state = state;
     _repository = repository;
     _onNext = onNext;
     _onPrevious = onPrevious;

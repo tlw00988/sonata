@@ -205,7 +205,9 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
         extractedColor = _paletteGenerator!.mutedColor!.color;
       }
 
-      if (kDebugMode) print('ThemeColor: extracted ${extractedColor?.value}');
+      if (kDebugMode) {
+        print('ThemeColor: extracted ${extractedColor?.toARGB32()}');
+      }
       widget.onColorExtracted?.call(extractedColor);
     } catch (e) {
       if (kDebugMode) print('ThemeColor: error $e');

@@ -326,12 +326,13 @@ class _LibraryScreenState extends State<LibraryScreen>
   Widget _buildSongsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_songs.isEmpty)
+    if (_songs.isEmpty) {
       return _buildEmptyState(
         icon: Icons.music_note_outlined,
         title: loc.noSongs,
         subtitle: _error ?? loc.noSongsHint,
       );
+    }
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -360,12 +361,13 @@ class _LibraryScreenState extends State<LibraryScreen>
   Widget _buildAlbumsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_albums.isEmpty)
+    if (_albums.isEmpty) {
       return _buildEmptyState(
         icon: Icons.album_outlined,
         title: loc.noAlbums,
         subtitle: _error ?? loc.noAlbumsHint,
       );
+    }
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -406,12 +408,13 @@ class _LibraryScreenState extends State<LibraryScreen>
   Widget _buildArtistsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_artists.isEmpty)
+    if (_artists.isEmpty) {
       return _buildEmptyState(
         icon: Icons.person_outline,
         title: loc.noArtists,
         subtitle: _error ?? loc.noArtistsHint,
       );
+    }
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -439,7 +442,7 @@ class _LibraryScreenState extends State<LibraryScreen>
   Widget _buildPlaylistsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_playlists.isEmpty)
+    if (_playlists.isEmpty) {
       return _buildEmptyState(
         icon: Icons.queue_music_outlined,
         title: loc.noPlaylists,
@@ -447,6 +450,7 @@ class _LibraryScreenState extends State<LibraryScreen>
         actionLabel: loc.createPlaylist,
         onAction: () {},
       );
+    }
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -716,8 +720,7 @@ class _LibraryScreenState extends State<LibraryScreen>
 class _MusicSearchDelegate extends SearchDelegate<String> {
   final MusicRepository? _repository;
 
-  _MusicSearchDelegate({required MusicRepository? repository})
-    : _repository = repository;
+  _MusicSearchDelegate({required this._repository});
 
   @override
   List<Widget> buildActions(BuildContext context) {
@@ -1547,7 +1550,7 @@ class PlaylistDetailScreen extends StatefulWidget {
 }
 
 class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
-  List<Track> _tracks = [];
+  final List<Track> _tracks = [];
   bool _isLoading = true;
 
   @override

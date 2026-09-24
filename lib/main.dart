@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:media_kit/media_kit.dart';
 import 'app.dart';
 import 'player/audio_handler.dart';
-import 'l10n/app_localizations.dart';
 
 late MusicAudioHandler audioHandler;
 

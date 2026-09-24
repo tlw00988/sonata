@@ -3,7 +3,6 @@ import 'dart:ui' show Color;
 import 'package:flutter/foundation.dart';
 import 'package:media_kit/media_kit.dart' as mk;
 import 'player_state.dart';
-import 'audio_handler.dart';
 import '../models/models.dart';
 import '../api/api.dart';
 import '../main.dart' show audioHandler;

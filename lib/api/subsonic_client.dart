@@ -8,9 +8,8 @@ class SubsonicClient {
   final SubsonicAuth _auth;
   final String baseUrl;
 
-  SubsonicClient({required this.baseUrl, required SubsonicAuth auth, Dio? dio})
-    : _auth = auth,
-      _dio = dio ?? _createDio(baseUrl);
+  SubsonicClient({required this.baseUrl, required this._auth, Dio? dio})
+    : _dio = dio ?? _createDio(baseUrl);
 
   static Dio _createDio(String baseUrl) {
     return Dio(
@@ -118,9 +117,9 @@ class SubsonicClient {
       final result = await _get(
         '/rest/getRandomSongs',
         queryParams: {
-          if (genre != null) 'genre': genre,
-          if (fromYear != null) 'fromYear': fromYear,
-          if (toYear != null) 'toYear': toYear,
+          'genre': ?genre,
+          'fromYear': ?fromYear,
+          'toYear': ?toYear,
           if (size != null) 'size': size.toString(),
           if (offset != null) 'offset': offset.toString(),
         },
@@ -218,8 +217,9 @@ class SubsonicClient {
   }) {
     final params = {..._auth.authParams, 'id': trackId};
     if (format != null) params['format'] = format;
-    if (estimateContentLength != null)
+    if (estimateContentLength != null) {
       params['estimateContentLength'] = estimateContentLength.toString();
+    }
     final queryString = params.entries
         .map((e) => '${e.key}=${Uri.encodeComponent(e.value.toString())}')
         .join('&');

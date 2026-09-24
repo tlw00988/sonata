@@ -570,7 +570,6 @@ class AppTheme {
   static ThemeData withAccentColorLight(ThemeData base, Color accentColor) {
     final glowColor = _computeGlowColor(accentColor);
     final borderColor = _computeBorderColor(accentColor);
-    final darkAccent = _darkenColor(accentColor);
 
     return base.copyWith(
       colorScheme: base.colorScheme.copyWith(
