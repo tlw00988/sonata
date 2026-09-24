@@ -1,6 +1,6 @@
-# Flutter Music Player
+# Sonata
 
-一个基于 Flutter 的跨平台音乐播放器，既可以连接 Navidrome / OpenSubsonic 音乐服务器播放你的在线曲库，也可以播放本地音频文件。
+一个基于 Flutter 的跨平台音乐播放器（仓库：[tlw00988/sonata](https://github.com/tlw00988/sonata)），既可以连接 Navidrome / OpenSubsonic 音乐服务器播放你的在线曲库，也可以播放本地音频文件。
 
 ## 功能
 
@@ -33,8 +33,8 @@
 获取源码并拉取依赖：
 
 ```bash
-git clone <仓库地址>
-cd flutter_player
+git clone https://github.com/tlw00988/sonata.git
+cd sonata
 flutter pub get
 ```
 

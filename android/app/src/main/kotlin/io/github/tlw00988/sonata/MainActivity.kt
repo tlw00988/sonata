@@ -1,4 +1,4 @@
-package com.musicplayer.flutter_music_player
+package io.github.tlw00988.sonata
 
 import com.ryanheise.audioservice.AudioServiceFragmentActivity
 

@@ -1,6 +1,6 @@
 {
   "@@locale": "zh",
-  "appTitle": "Flutter 音乐播放器",
+  "appTitle": "Sonata",
 
   "playerTab": "播放器",
   "libraryTab": "音乐库",

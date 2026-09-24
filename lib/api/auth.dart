@@ -8,7 +8,7 @@ class SubsonicAuth {
   final String salt;
   final String? apiKey;
   final String version = '1.16.1';
-  final String clientName = 'flutter_music_player';
+  final String clientName = 'sonata';
 
   factory SubsonicAuth({
     required String username,

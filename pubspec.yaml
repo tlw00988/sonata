@@ -1,5 +1,5 @@
-name: flutter_music_player
-description: "A Flutter music player with Navidrome/OpenSubsonic support"
+name: sonata
+description: "Sonata, a Flutter music player with Navidrome/OpenSubsonic support"
 publish_to: 'none'
 version: 1.0.0+1
 

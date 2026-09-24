@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Flutter Music Player';
+  String get appTitle => 'Sonata';
 
   @override
   String get playerTab => 'Player';

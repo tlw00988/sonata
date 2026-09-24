@@ -9,7 +9,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'Flutter 音乐播放器';
+  String get appTitle => 'Sonata';
 
   @override
   String get playerTab => '播放器';

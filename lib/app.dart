@@ -9,14 +9,14 @@ import 'player/player.dart';
 import 'screens/screens.dart';
 import 'api/api.dart';
 
-class MusicPlayerApp extends StatefulWidget {
-  const MusicPlayerApp({super.key});
+class SonataApp extends StatefulWidget {
+  const SonataApp({super.key});
 
   @override
-  State<MusicPlayerApp> createState() => _MusicPlayerAppState();
+  State<SonataApp> createState() => _SonataAppState();
 }
 
-class _MusicPlayerAppState extends State<MusicPlayerApp> {
+class _SonataAppState extends State<SonataApp> {
   MusicRepository? _repository;
   bool _isInitialized = false;
   ThemeMode _themeMode = ThemeMode.system;
@@ -206,7 +206,7 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
           );
 
           return MaterialApp(
-            title: 'Flutter Music Player',
+            title: 'Sonata',
             debugShowCheckedModeBanner: false,
             themeMode: _themeMode,
             theme: effectiveLight,

@@ -14,11 +14,11 @@ Future<void> main() async {
   audioHandler = await AudioService.init(
     builder: () => MusicAudioHandler(),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.musicplayer.flutter_music_player.channel',
+      androidNotificationChannelId: 'io.github.tlw00988.sonata.channel',
       androidNotificationChannelName: 'Music Playback',
       androidNotificationOngoing: true,
       androidStopForegroundOnPause: true,
     ),
   );
-  runApp(const MusicPlayerApp());
+  runApp(const SonataApp());
 }

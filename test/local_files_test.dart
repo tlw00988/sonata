@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:flutter_music_player/api/api.dart';
+import 'package:sonata/api/api.dart';
 
 void main() {
   group('normalizeLrc', () {
@@ -44,8 +44,10 @@ void main() {
     });
 
     test('normalizes CRLF and blank lines', () {
-      expect(normalizeLrc('[00:01.00]a\r\n\r\n[00:02.00]b'),
-          '[00:01.000]a\n[00:02.000]b');
+      expect(
+        normalizeLrc('[00:01.00]a\r\n\r\n[00:02.00]b'),
+        '[00:01.000]a\n[00:02.000]b',
+      );
     });
   });
 
@@ -144,11 +146,13 @@ void main() {
 
     test('reads ID3 tags instead of guessing from the file name', () async {
       final file = File('${dir.path}/Wrong Name.mp3');
-      await file.writeAsBytes(_mp3WithTag(
-        title: 'Real Title',
-        artist: 'Real Artist',
-        album: 'Real Album',
-      ));
+      await file.writeAsBytes(
+        _mp3WithTag(
+          title: 'Real Title',
+          artist: 'Real Artist',
+          album: 'Real Album',
+        ),
+      );
 
       final track = await LocalFileRepository().trackFromFile(file.path);
 
@@ -176,8 +180,9 @@ void main() {
     });
 
     test('returns null for a missing file', () async {
-      final track =
-          await LocalFileRepository().trackFromFile('${dir.path}/nope.mp3');
+      final track = await LocalFileRepository().trackFromFile(
+        '${dir.path}/nope.mp3',
+      );
       expect(track, isNull);
     });
   });
@@ -231,15 +236,15 @@ List<int> _textFrame(String id, String text) {
 }
 
 List<int> _syncsafe(int value) => [
-      (value >> 21) & 0x7F,
-      (value >> 14) & 0x7F,
-      (value >> 7) & 0x7F,
-      value & 0x7F,
-    ];
+  (value >> 21) & 0x7F,
+  (value >> 14) & 0x7F,
+  (value >> 7) & 0x7F,
+  value & 0x7F,
+];
 
 List<int> _be32(int value) => [
-      (value >> 24) & 0xFF,
-      (value >> 16) & 0xFF,
-      (value >> 8) & 0xFF,
-      value & 0xFF,
-    ];
+  (value >> 24) & 0xFF,
+  (value >> 16) & 0xFF,
+  (value >> 8) & 0xFF,
+  value & 0xFF,
+];
