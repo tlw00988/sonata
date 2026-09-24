@@ -75,7 +75,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scanLocalHint => 'Scan music folders or pick files';
 
   @override
-  String get scanDefaultFolders => 'Scan Default Folders';
+  String get scanDefaultFolders => 'Scan Local Folders';
 
   @override
   String get pickFolder => 'Pick Folder';
@@ -320,4 +320,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get darkThemeHint => 'Always dark';
+
+  @override
+  String get localMusicSection => 'Local Music';
+
+  @override
+  String get localMusicDirsHint =>
+      'Folders scanned for local audio files. Changes apply the next time you rescan from the Library tab.';
+
+  @override
+  String get addFolder => 'Add Folder';
+
+  @override
+  String get removeFolder => 'Remove Folder';
+
+  @override
+  String get restoreDefaultFolders => 'Restore Default Folders';
+
+  @override
+  String get noLocalDirs => 'No folders added yet';
+
+  @override
+  String get folderMissing => 'Folder not found';
 }

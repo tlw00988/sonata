@@ -10,6 +10,14 @@ String _resolveCoverArt(BuildContext context, String id) {
   return resolveCoverUrl(context, id) ?? '';
 }
 
+/// Hands control back to the player once playback starts from a detail
+/// route. Those routes are pushed on top of the bottom navigation, so
+/// without popping them the tab switch stays invisible.
+void _returnToPlayer(BuildContext context) {
+  context.read<ValueNotifier<int>>().value = 0;
+  Navigator.of(context).popUntil((route) => route.isFirst);
+}
+
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
@@ -131,6 +139,13 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
       dialogTitle: loc.selectFolderToScan,
     );
     if (dirPath == null) return;
+
+    // Remember the folder so the next "scan local folders" (and the list in
+    // Settings) includes it instead of silently dropping the pick.
+    final known = await _localRepository.getScanDirectories();
+    if (!known.contains(dirPath)) {
+      await _localRepository.saveScanDirectories([...known, dirPath]);
+    }
 
     setState(() {
       _isScanningLocal = true;
@@ -1246,6 +1261,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
   void _playAlbum(BuildContext context) {
     if (_tracks.isNotEmpty) {
       context.read<PlayerController>().playQueue(_tracks);
+      _returnToPlayer(context);
     }
   }
 
@@ -1261,6 +1277,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
 
   void _playTrack(BuildContext context, int index) {
     context.read<PlayerController>().playQueue(_tracks, startIndex: index);
+    _returnToPlayer(context);
   }
 }
 
@@ -1548,6 +1565,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   void _playPlaylist(BuildContext context) {
     if (_tracks.isNotEmpty) {
       context.read<PlayerController>().playQueue(_tracks);
+      _returnToPlayer(context);
     }
   }
 
@@ -1563,6 +1581,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   void _playTrack(BuildContext context, int index) {
     context.read<PlayerController>().playQueue(_tracks, startIndex: index);
+    _returnToPlayer(context);
   }
 
   String _formatDuration(int milliseconds) {

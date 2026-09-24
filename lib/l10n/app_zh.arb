@@ -25,7 +25,7 @@
   "noLocalFiles": "暂无本地文件",
   "scanning": "扫描中...",
   "scanLocalHint": "扫描音乐文件夹或选择文件",
-  "scanDefaultFolders": "扫描默认文件夹",
+  "scanDefaultFolders": "扫描本地目录",
   "pickFolder": "选择文件夹",
   "localTracksCount": "{count} 首本地歌曲",
   "@localTracksCount": {
@@ -185,5 +185,13 @@
   "lightTheme": "浅色模式",
   "lightThemeHint": "始终使用浅色",
   "darkTheme": "深色模式",
-  "darkThemeHint": "始终使用深色"
+  "darkThemeHint": "始终使用深色",
+
+  "localMusicSection": "本地音乐",
+  "localMusicDirsHint": "用于扫描本地音频文件的目录。添加或移除后，请在音乐库标签页重新扫描生效。",
+  "addFolder": "添加目录",
+  "removeFolder": "移除目录",
+  "restoreDefaultFolders": "恢复默认目录",
+  "noLocalDirs": "尚未添加目录",
+  "folderMissing": "目录不存在"
 }

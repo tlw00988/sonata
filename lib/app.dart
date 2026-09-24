@@ -21,15 +21,25 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
   bool _isInitialized = false;
   ThemeMode _themeMode = ThemeMode.system;
 
+  /// Currently visible bottom-tab. Lives above the Navigator so detail
+  /// routes pushed from the library can hand control back to the player.
+  final ValueNotifier<int> _tabIndex = ValueNotifier<int>(0);
+
   @override
   void initState() {
     super.initState();
     _initializeRepository();
   }
 
+  @override
+  void dispose() {
+    _tabIndex.dispose();
+    super.dispose();
+  }
+
   Future<void> _initializeRepository() async {
     final prefs = await SharedPreferences.getInstance();
-    
+
     final themeModeIndex = prefs.getInt('theme_mode') ?? 0;
     _themeMode = ThemeMode.values[themeModeIndex.clamp(0, 2)];
 
@@ -37,16 +47,20 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
     final username = prefs.getString('username');
     final password = prefs.getString('password');
     final apiKey = prefs.getString('api_key');
-    
+
     if (serverUrl != null && serverUrl.isNotEmpty) {
       final SubsonicAuth auth;
       if (apiKey != null && apiKey.isNotEmpty) {
         auth = SubsonicAuth(username: 'unused', apiKey: apiKey);
-      } else if (username != null && password != null && 
-          username.isNotEmpty && password.isNotEmpty) {
+      } else if (username != null &&
+          password != null &&
+          username.isNotEmpty &&
+          password.isNotEmpty) {
         auth = SubsonicAuth(username: username, password: password);
       } else {
-        setState(() { _isInitialized = true; });
+        setState(() {
+          _isInitialized = true;
+        });
         return;
       }
       final client = SubsonicClient(baseUrl: serverUrl, auth: auth);
@@ -72,7 +86,9 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
   }
 
   void setThemeMode(ThemeMode mode) async {
-    setState(() { _themeMode = mode; });
+    setState(() {
+      _themeMode = mode;
+    });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('theme_mode', mode.index);
   }
@@ -81,9 +97,7 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
   Widget build(BuildContext context) {
     if (!_isInitialized) {
       return const MaterialApp(
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
       );
     }
 
@@ -102,21 +116,28 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
         ),
         if (_repository != null)
           Provider<MusicRepository>.value(value: _repository!),
-        Provider<Function(String, String, String)>.value(value: _updateRepository),
+        Provider<Function(String, String, String)>.value(
+          value: _updateRepository,
+        ),
         Provider<Function()>.value(value: _clearRepository),
         Provider<Function(ThemeMode)>.value(value: setThemeMode),
         Provider<ThemeMode>.value(value: _themeMode),
+        Provider<ValueNotifier<int>>.value(value: _tabIndex),
       ],
       child: DynamicColorBuilder(
         builder: (lightDynamic, darkDynamic) {
-          final lightScheme = lightDynamic ?? ColorScheme.fromSeed(
-            seedColor: AppTheme.lightTheme.colorScheme.primary,
-            brightness: Brightness.light,
-          );
-          final darkScheme = darkDynamic ?? ColorScheme.fromSeed(
-            seedColor: AppTheme.darkTheme.colorScheme.primary,
-            brightness: Brightness.dark,
-          );
+          final lightScheme =
+              lightDynamic ??
+              ColorScheme.fromSeed(
+                seedColor: AppTheme.lightTheme.colorScheme.primary,
+                brightness: Brightness.light,
+              );
+          final darkScheme =
+              darkDynamic ??
+              ColorScheme.fromSeed(
+                seedColor: AppTheme.darkTheme.colorScheme.primary,
+                brightness: Brightness.dark,
+              );
 
           final effectiveLight = AppTheme.lightTheme.copyWith(
             colorScheme: lightScheme,
@@ -124,9 +145,17 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
               indicatorColor: lightScheme.primary.withValues(alpha: 0.12),
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return TextStyle(color: lightScheme.primary, fontSize: 12, fontWeight: FontWeight.w500);
+                  return TextStyle(
+                    color: lightScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  );
                 }
-                return TextStyle(color: lightScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500);
+                return TextStyle(
+                  color: lightScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                );
               }),
             ),
             sliderTheme: AppTheme.lightTheme.sliderTheme.copyWith(
@@ -149,9 +178,17 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
               indicatorColor: darkScheme.primary.withValues(alpha: 0.15),
               labelTextStyle: WidgetStateProperty.resolveWith((states) {
                 if (states.contains(WidgetState.selected)) {
-                  return TextStyle(color: darkScheme.primary, fontSize: 12, fontWeight: FontWeight.w500);
+                  return TextStyle(
+                    color: darkScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  );
                 }
-                return TextStyle(color: darkScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500);
+                return TextStyle(
+                  color: darkScheme.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                );
               }),
             ),
             sliderTheme: AppTheme.darkTheme.sliderTheme.copyWith(
@@ -181,33 +218,40 @@ class _MusicPlayerAppState extends State<MusicPlayerApp> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: const [
-              Locale('en'),
-              Locale('zh'),
-            ],
-            home: Consumer<PlayerState>(
-              builder: (context, playerState, _) {
-                final color = playerState.themeColor;
-                final brightness = Theme.of(context).brightness;
+            supportedLocales: const [Locale('en'), Locale('zh')],
+            // The cover-seeded theme has to wrap the Navigator rather than
+            // `home` alone: detail routes pushed from the library are
+            // siblings of `home`, so a Theme below the Navigator leaves them
+            // stuck on the static scheme and they never pick up the colour
+            // of the track being played.
+            builder: (context, child) {
+              final color = context.watch<PlayerState>().themeColor;
+              if (color == null) return child ?? const SizedBox.shrink();
 
-                if (color == null) return const MainNavigation();
+              // Read the brightness without Theme.of: the builder context may
+              // sit above the static theme depending on MaterialApp's
+              // internals, which would silently report light in dark mode.
+              final brightness = switch (_themeMode) {
+                ThemeMode.system =>
+                  WidgetsBinding.instance.platformDispatcher.platformBrightness,
+                ThemeMode.dark => Brightness.dark,
+                ThemeMode.light => Brightness.light,
+              };
 
-                final seedScheme = ColorScheme.fromSeed(
-                  seedColor: color,
-                  brightness: brightness,
-                );
+              final seedScheme = ColorScheme.fromSeed(
+                seedColor: color,
+                brightness: brightness,
+              );
 
-                final themed = (brightness == Brightness.light
-                        ? AppTheme.lightTheme
-                        : AppTheme.darkTheme)
-                    .copyWith(colorScheme: seedScheme);
+              final themed =
+                  (brightness == Brightness.light
+                          ? AppTheme.lightTheme
+                          : AppTheme.darkTheme)
+                      .copyWith(colorScheme: seedScheme);
 
-                return Theme(
-                  data: themed,
-                  child: const MainNavigation(),
-                );
-              },
-            ),
+              return Theme(data: themed, child: child!);
+            },
+            home: const MainNavigation(),
           );
         },
       ),
@@ -223,8 +267,6 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int _currentIndex = 0;
-  
   final List<Widget> _screens = const [
     PlayerScreen(),
     LibraryScreen(),
@@ -235,45 +277,80 @@ class _MainNavigationState extends State<MainNavigation> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final loc = AppLocalizations.of(context)!;
+    final tabIndex = context.read<ValueNotifier<int>>();
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        height: 70,
-        backgroundColor: colorScheme.surface,
-        indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
-        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-        surfaceTintColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) {
-            return TextStyle(color: colorScheme.primary, fontSize: 12, fontWeight: FontWeight.w500);
-          }
-          return TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12, fontWeight: FontWeight.w500);
-        }),
-        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.music_note_outlined, size: 24, color: colorScheme.onSurfaceVariant),
-            selectedIcon: Icon(Icons.music_note, size: 24, color: colorScheme.primary),
-            label: loc.playerTab,
+    return ValueListenableBuilder<int>(
+      valueListenable: tabIndex,
+      builder: (context, index, _) {
+        return Scaffold(
+          body: IndexedStack(index: index, children: _screens),
+          bottomNavigationBar: NavigationBar(
+            selectedIndex: index,
+            onDestinationSelected: (i) => tabIndex.value = i,
+            height: 70,
+            backgroundColor: colorScheme.surface,
+            indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+            surfaceTintColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            labelTextStyle: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.selected)) {
+                return TextStyle(
+                  color: colorScheme.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                );
+              }
+              return TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              );
+            }),
+            destinations: [
+              NavigationDestination(
+                icon: Icon(
+                  Icons.music_note_outlined,
+                  size: 24,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                selectedIcon: Icon(
+                  Icons.music_note,
+                  size: 24,
+                  color: colorScheme.primary,
+                ),
+                label: loc.playerTab,
+              ),
+              NavigationDestination(
+                icon: Icon(
+                  Icons.library_music_outlined,
+                  size: 24,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                selectedIcon: Icon(
+                  Icons.library_music,
+                  size: 24,
+                  color: colorScheme.primary,
+                ),
+                label: loc.libraryTab,
+              ),
+              NavigationDestination(
+                icon: Icon(
+                  Icons.settings_outlined,
+                  size: 24,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                selectedIcon: Icon(
+                  Icons.settings,
+                  size: 24,
+                  color: colorScheme.primary,
+                ),
+                label: loc.settingsTab,
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.library_music_outlined, size: 24, color: colorScheme.onSurfaceVariant),
-            selectedIcon: Icon(Icons.library_music, size: 24, color: colorScheme.primary),
-            label: loc.libraryTab,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined, size: 24, color: colorScheme.onSurfaceVariant),
-            selectedIcon: Icon(Icons.settings, size: 24, color: colorScheme.primary),
-            label: loc.settingsTab,
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,10 +24,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _isTesting = false;
   String? _connectionError;
 
+  final LocalFileRepository _localRepository = LocalFileRepository();
+
+  /// Folders scanned for local audio, as listed in settings.
+  List<String> _musicDirs = [];
+
+  /// Subset of [_musicDirs] that does not exist on disk anymore.
+  final Set<String> _missingDirs = {};
+
+  bool _musicDirsLoaded = false;
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
+    _loadMusicDirs();
   }
 
   @override
@@ -58,7 +72,88 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _clearSettings() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+    // Only the server connection keys. Clearing everything would also wipe
+    // the theme choice and the managed music folders.
+    for (final key in [
+      'server_url',
+      'username',
+      'password',
+      'api_key',
+      'is_connected',
+    ]) {
+      await prefs.remove(key);
+    }
+  }
+
+  Future<void> _loadMusicDirs() async {
+    final dirs = await _localRepository.getScanDirectories();
+    final missing = await _findMissingDirs(dirs);
+    if (!mounted) return;
+    setState(() {
+      _musicDirs = dirs;
+      _missingDirs
+        ..clear()
+        ..addAll(missing);
+      _musicDirsLoaded = true;
+    });
+  }
+
+  Future<Set<String>> _findMissingDirs(List<String> dirs) async {
+    final missing = <String>{};
+    for (final dir in dirs) {
+      try {
+        if (!await Directory(dir).exists()) missing.add(dir);
+      } catch (e) {
+        // Unreadable path: treat it as missing so the row is flagged.
+        missing.add(dir);
+      }
+    }
+    return missing;
+  }
+
+  Future<void> _addMusicDir() async {
+    final loc = AppLocalizations.of(context)!;
+    final path = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: loc.addFolder,
+    );
+    if (path == null || !mounted) return;
+
+    final saved = await _localRepository.saveScanDirectories([
+      ..._musicDirs,
+      path,
+    ]);
+    final missing = await _findMissingDirs(saved);
+    if (!mounted) return;
+    setState(() {
+      _musicDirs = saved;
+      _missingDirs
+        ..clear()
+        ..addAll(missing);
+    });
+  }
+
+  Future<void> _removeMusicDir(String path) async {
+    final saved = await _localRepository.saveScanDirectories(
+      _musicDirs.where((dir) => dir != path).toList(),
+    );
+    if (!mounted) return;
+    setState(() {
+      _musicDirs = saved;
+      _missingDirs.remove(path);
+    });
+  }
+
+  Future<void> _restoreDefaultMusicDirs() async {
+    final defaults = await _localRepository.defaultDirectories();
+    final saved = await _localRepository.saveScanDirectories(defaults);
+    final missing = await _findMissingDirs(saved);
+    if (!mounted) return;
+    setState(() {
+      _musicDirs = saved;
+      _missingDirs
+        ..clear()
+        ..addAll(missing);
+    });
   }
 
   Future<void> _testConnection() async {
@@ -281,6 +376,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             
             _buildThemeModeTile(context),
             const SizedBox(height: 32),
+
+            // Local Music Section
+            _buildLocalMusicSection(),
+            const SizedBox(height: 32),
             
             // About Section
             _buildSectionHeader(loc.about),
@@ -313,6 +412,157 @@ class _SettingsScreenState extends State<SettingsScreen> {
         fontSize: 13,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  Widget _buildLocalMusicSection() {
+    final loc = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildSectionHeader(loc.localMusicSection)),
+            TextButton.icon(
+              onPressed: _addMusicDir,
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(loc.addFolder),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          loc.localMusicDirsHint,
+          style: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 12,
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (!_musicDirsLoaded)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          )
+        else if (_musicDirs.isEmpty)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.folder_open,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 32,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  loc.noLocalDirs,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                for (var i = 0; i < _musicDirs.length; i++) ...[
+                  if (i > 0)
+                    Divider(height: 1, color: colorScheme.outlineVariant),
+                  _buildMusicDirRow(_musicDirs[i]),
+                ],
+              ],
+            ),
+          ),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            onPressed: _restoreDefaultMusicDirs,
+            icon: const Icon(Icons.restart_alt, size: 18),
+            label: Text(loc.restoreDefaultFolders),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMusicDirRow(String path) {
+    final loc = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isMissing = _missingDirs.contains(path);
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 16, right: 4, top: 4, bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: (isMissing ? colorScheme.error : colorScheme.primary)
+                  .withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isMissing ? Icons.folder_off : Icons.folder,
+              color: isMissing ? colorScheme.error : colorScheme.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  path,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontSize: 14,
+                  ),
+                ),
+                if (isMissing)
+                  Text(
+                    loc.folderMissing,
+                    style: TextStyle(
+                      color: colorScheme.error,
+                      fontSize: 12,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: () => _removeMusicDir(path),
+            tooltip: loc.removeFolder,
+            icon: Icon(
+              Icons.delete_outline,
+              color: colorScheme.onSurfaceVariant,
+              size: 20,
+            ),
+          ),
+        ],
       ),
     );
   }

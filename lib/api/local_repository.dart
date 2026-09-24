@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:audio_metadata_reader/audio_metadata_reader.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/models.dart';
 
@@ -25,13 +26,14 @@ class LocalFileRepository {
   /// does not re-list it for every track it contains.
   final Map<String, Map<String, String>> _dirIndex = {};
 
+  /// Preference key holding the folders walked by [scanForAudioFiles].
+  static const String localDirsPrefKey = 'local_music_dirs';
+
   Future<List<Track>> scanForAudioFiles() async {
     final tracks = <Track>[];
 
-    // Get common music directories
-    final directories = await _getMusicDirectories();
-
-    for (final dir in directories) {
+    for (final path in await getScanDirectories()) {
+      final dir = Directory(path);
       if (await dir.exists()) {
         await _scanDirectory(dir, tracks);
       }
@@ -40,27 +42,55 @@ class LocalFileRepository {
     return tracks;
   }
 
-  Future<List<Directory>> _getMusicDirectories() async {
-    final directories = <Directory>[];
+  /// The folders to scan, in the order they appear in the library.
+  ///
+  /// The first call stores this platform's defaults so the settings screen
+  /// has something to list and edit; from then on the stored list is the
+  /// only source of truth, including when the user has emptied it.
+  Future<List<String>> getScanDirectories() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList(localDirsPrefKey);
+    if (saved != null) return normalizeDirList(saved);
 
-    // Android/iOS music directory
+    final defaults = normalizeDirList(await defaultDirectories());
+    await prefs.setStringList(localDirsPrefKey, defaults);
+    return defaults;
+  }
+
+  /// Persists [dirs] as the scan list and returns it cleaned up, so callers
+  /// can rebuild their state from what was actually stored.
+  Future<List<String>> saveScanDirectories(List<String> dirs) async {
+    final normalized = normalizeDirList(dirs);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(localDirsPrefKey, normalized);
+    return normalized;
+  }
+
+  /// The folders this platform ships with, before the user edits them.
+  ///
+  /// Each lookup is isolated: a platform that does not provide a given
+  /// location simply skips it instead of failing the whole scan.
+  Future<List<String>> defaultDirectories() async {
+    final directories = <String>[];
+
+    // Android/iOS app-specific storage
     try {
       final extDir = await getExternalStorageDirectory();
       if (extDir != null) {
-        directories.add(Directory('${extDir.path}/Music'));
-        directories.add(Directory('${extDir.path}/Download'));
+        directories.add('${extDir.path}/Music');
+        directories.add('${extDir.path}/Download');
       }
     } catch (e) {
-      // Ignore
+      // Not on Android, or the platform channel is unavailable.
     }
 
     // Windows
     try {
       final userProfile = Platform.environment['USERPROFILE'];
       if (userProfile != null) {
-        directories.add(Directory('$userProfile\\Music'));
-        directories.add(Directory('$userProfile\\Downloads'));
-        directories.add(Directory('$userProfile\\Desktop'));
+        directories.add('$userProfile\\Music');
+        directories.add('$userProfile\\Downloads');
+        directories.add('$userProfile\\Desktop');
       }
     } catch (e) {
       // Ignore
@@ -70,8 +100,8 @@ class LocalFileRepository {
     try {
       final homeDir = Platform.environment['HOME'] ?? '';
       if (homeDir.isNotEmpty) {
-        directories.add(Directory('$homeDir/Music'));
-        directories.add(Directory('$homeDir/Downloads'));
+        directories.add('$homeDir/Music');
+        directories.add('$homeDir/Downloads');
       }
     } catch (e) {
       // Ignore
@@ -79,6 +109,32 @@ class LocalFileRepository {
 
     return directories;
   }
+
+  /// Trims entries, drops blanks, strips trailing separators and removes
+  /// duplicates while keeping their first position, so a hand-edited list
+  /// never scans the same folder twice.
+  static List<String> normalizeDirList(List<String> dirs) {
+    final seen = <String>{};
+    final normalized = <String>[];
+
+    for (final dir in dirs) {
+      var path = dir.trim();
+      while (path.length > 1 &&
+          (path.endsWith('/') || path.endsWith(r'\')) &&
+          !_isDriveRoot(path)) {
+        path = path.substring(0, path.length - 1);
+      }
+      if (path.isEmpty) continue;
+      if (seen.add(path)) normalized.add(path);
+    }
+
+    return normalized;
+  }
+
+  /// `C:\` and friends: stripping the separator would turn the root into a
+  /// drive-relative path.
+  static bool _isDriveRoot(String path) =>
+      path.length == 3 && path[1] == ':' && path[0] != path[2];
 
   Future<void> _scanDirectory(Directory dir, List<Track> tracks) async {
     try {

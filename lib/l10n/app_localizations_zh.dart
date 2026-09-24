@@ -75,7 +75,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get scanLocalHint => '扫描音乐文件夹或选择文件';
 
   @override
-  String get scanDefaultFolders => '扫描默认文件夹';
+  String get scanDefaultFolders => '扫描本地目录';
 
   @override
   String get pickFolder => '选择文件夹';
@@ -320,4 +320,25 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get darkThemeHint => '始终使用深色';
+
+  @override
+  String get localMusicSection => '本地音乐';
+
+  @override
+  String get localMusicDirsHint => '用于扫描本地音频文件的目录。添加或移除后，请在音乐库标签页重新扫描生效。';
+
+  @override
+  String get addFolder => '添加目录';
+
+  @override
+  String get removeFolder => '移除目录';
+
+  @override
+  String get restoreDefaultFolders => '恢复默认目录';
+
+  @override
+  String get noLocalDirs => '尚未添加目录';
+
+  @override
+  String get folderMissing => '目录不存在';
 }

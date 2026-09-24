@@ -25,7 +25,7 @@
   "noLocalFiles": "No local files",
   "scanning": "Scanning...",
   "scanLocalHint": "Scan music folders or pick files",
-  "scanDefaultFolders": "Scan Default Folders",
+  "scanDefaultFolders": "Scan Local Folders",
   "pickFolder": "Pick Folder",
   "localTracksCount": "{count} local tracks",
   "@localTracksCount": {
@@ -185,5 +185,13 @@
   "lightTheme": "Light",
   "lightThemeHint": "Always light",
   "darkTheme": "Dark",
-  "darkThemeHint": "Always dark"
+  "darkThemeHint": "Always dark",
+
+  "localMusicSection": "Local Music",
+  "localMusicDirsHint": "Folders scanned for local audio files. Changes apply the next time you rescan from the Library tab.",
+  "addFolder": "Add Folder",
+  "removeFolder": "Remove Folder",
+  "restoreDefaultFolders": "Restore Default Folders",
+  "noLocalDirs": "No folders added yet",
+  "folderMissing": "Folder not found"
 }

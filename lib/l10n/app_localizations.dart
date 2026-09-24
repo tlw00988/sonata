@@ -233,7 +233,7 @@ abstract class AppLocalizations {
   /// No description provided for @scanDefaultFolders.
   ///
   /// In en, this message translates to:
-  /// **'Scan Default Folders'**
+  /// **'Scan Local Folders'**
   String get scanDefaultFolders;
 
   /// No description provided for @pickFolder.
@@ -655,6 +655,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Always dark'**
   String get darkThemeHint;
+
+  /// No description provided for @localMusicSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Music'**
+  String get localMusicSection;
+
+  /// No description provided for @localMusicDirsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Folders scanned for local audio files. Changes apply the next time you rescan from the Library tab.'**
+  String get localMusicDirsHint;
+
+  /// No description provided for @addFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Folder'**
+  String get addFolder;
+
+  /// No description provided for @removeFolder.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove Folder'**
+  String get removeFolder;
+
+  /// No description provided for @restoreDefaultFolders.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore Default Folders'**
+  String get restoreDefaultFolders;
+
+  /// No description provided for @noLocalDirs.
+  ///
+  /// In en, this message translates to:
+  /// **'No folders added yet'**
+  String get noLocalDirs;
+
+  /// No description provided for @folderMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder not found'**
+  String get folderMissing;
 }
 
 class _AppLocalizationsDelegate
