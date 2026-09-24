@@ -1,3 +1,5 @@
+import 'track.dart';
+
 class Playlist {
   final String id;
   final String name;
@@ -10,6 +12,12 @@ class Playlist {
   final DateTime created;
   final DateTime changed;
 
+  /// The songs this playlist contains.
+  ///
+  /// Subsonic only returns them under `entry` for `getPlaylist`, so a playlist
+  /// coming from `getPlaylists` has an empty list here.
+  final List<Track> tracks;
+
   Playlist({
     required this.id,
     required this.name,
@@ -21,6 +29,7 @@ class Playlist {
     this.duration = 0,
     required this.created,
     required this.changed,
+    this.tracks = const [],
   });
 
   factory Playlist.fromJson(Map<String, dynamic> json) {
@@ -39,6 +48,9 @@ class Playlist {
       changed:
           DateTime.tryParse(json['changed']?.toString() ?? '') ??
           DateTime.now(),
+      tracks: (json['entry'] as List<dynamic>? ?? [])
+          .map((item) => Track.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -54,6 +66,7 @@ class Playlist {
       'duration': duration,
       'created': created.toIso8601String(),
       'changed': changed.toIso8601String(),
+      'entry': tracks.map((track) => track.toJson()).toList(),
     };
   }
 }

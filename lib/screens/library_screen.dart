@@ -1550,7 +1550,7 @@ class PlaylistDetailScreen extends StatefulWidget {
 }
 
 class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
-  final List<Track> _tracks = [];
+  List<Track> _tracks = [];
   bool _isLoading = true;
 
   @override
@@ -1561,8 +1561,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   Future<void> _loadTracks() async {
     try {
-      await widget.repository.getPlaylist(widget.playlist.id);
+      final playlist = await widget.repository.getPlaylist(widget.playlist.id);
       setState(() {
+        _tracks = playlist?.tracks ?? [];
         _isLoading = false;
       });
     } catch (e) {
