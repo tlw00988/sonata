@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'l10n/app_localizations.dart';
+import 'credentials.dart';
 import 'theme/theme.dart';
 import 'player/player.dart';
 import 'screens/screens.dart';
@@ -39,14 +40,15 @@ class _SonataAppState extends State<SonataApp> {
 
   Future<void> _initializeRepository() async {
     final prefs = await SharedPreferences.getInstance();
+    final credentials = Credentials();
 
     final themeModeIndex = prefs.getInt('theme_mode') ?? 0;
     _themeMode = ThemeMode.values[themeModeIndex.clamp(0, 2)];
 
     final serverUrl = prefs.getString('server_url');
     final username = prefs.getString('username');
-    final password = prefs.getString('password');
-    final apiKey = prefs.getString('api_key');
+    final password = await credentials.readPassword();
+    final apiKey = await credentials.readApiKey();
 
     if (serverUrl != null && serverUrl.isNotEmpty) {
       final SubsonicAuth auth;

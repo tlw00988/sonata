@@ -1,0 +1,35 @@
+# Changelog
+
+本项目的所有重要变更都会记录在此文件中。
+
+格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+## [0.1.0] - 2026-09-24
+
+首个公开版本。
+
+### 新增
+
+- **在线曲库**：连接 Navidrome 或其他 OpenSubsonic 兼容服务器，浏览歌曲、
+  专辑、艺术家与播放列表
+- **本地播放**：扫描设备上的音乐目录，或手动选择文件夹 / 文件进行播放，
+  支持 MP3、FLAC、WAV、OGG、M4A、AAC、OPUS、APE、AIFF、WMA
+- **全局搜索**：搜索歌曲、专辑与艺术家
+- **播放队列**：查看、增删、清空播放队列
+- **收藏**：对歌曲添加 / 移除收藏
+- **歌词**：显示当前播放歌曲的歌词；本地歌曲优先读取同名 `.lrc` 文件
+  （自动识别 UTF-8 / UTF-16 / GBK 等编码），其次读取内嵌歌词
+- **封面取色**：根据专辑封面自动生成主题配色，支持系统动态取色（Material You）
+- **凭据加密**：服务器密码与 API Key 加密保存在系统安全存储中
+  （Android KeyStore、Apple Keychain、Linux libsecret、Windows 凭据管理器），
+  不再以明文写入 `SharedPreferences`；旧版本保存的明文凭据会在首次启动时自动迁移
+- **系统媒体控制**：通知栏、锁屏与桌面媒体键的播放控制及播放状态同步
+- **主题模式**：跟随系统 / 浅色 / 深色三种模式可选
+- **多语言**：内置英文与简体中文界面，跟随系统语言
+- **跨平台**：Android、iOS、Windows、macOS、Linux
+
+### 已知限制
+
+- `release.yml` 目前只自动构建并发布 Linux、Windows 与 Android 产物，
+  macOS 与 iOS 需按 README 手动构建。

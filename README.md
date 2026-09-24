@@ -24,8 +24,8 @@
 | 平台 | 额外要求 |
 | --- | --- |
 | Android | Android SDK、JDK 17 |
-| Windows | Visual Studio（含「使用 C++ 的桌面开发」工作负载） |
-| Linux | `clang`、`cmake`、`ninja-build`、GTK 3 开发头文件 |
+| Windows | Visual Studio（含「使用 C++ 的桌面开发」工作负载）、C++ ATL 库 |
+| Linux | `clang`、`cmake`、`ninja-build`、GTK 3 开发头文件、`libsecret-1-dev` |
 | macOS / iOS | Xcode、CocoaPods |
 
 ## 编译
@@ -78,8 +78,9 @@ flutter test      # 运行测试
 flutter analyze   # 静态检查
 ```
 
-> **提示**：Android 的 release 构建目前使用 debug 签名，正式发布前请在
-> `android/app/build.gradle.kts` 中配置你自己的签名信息。
+> **提示**：Android 的 release 构建默认使用 debug 签名。要用自己的发布密钥
+> 签名，请编辑 `android/key.properties`（已被 gitignore，不会提交），填入
+> `storePassword`、`keyAlias` 与 `keyPassword`；留空则继续使用 debug 签名。
 > 多语言资源在构建时自动生成，无需额外步骤。
 
 ## 配置
@@ -98,7 +99,9 @@ flutter analyze   # 静态检查
 | API Key | 可选。填写后优先使用 API Key 认证，此时用户名与密码可不填 |
 
 填写完成后点击 **测试连接**，连接成功即自动保存并生效；点击 **断开连接**
-可清除本地保存的服务器配置。配置仅保存在本机。
+可清除本地保存的服务器配置。服务器地址与用户名保存在本机，密码与 API Key
+加密保存在系统安全存储中（Android KeyStore、Apple Keychain、Linux
+libsecret、Windows 凭据管理器）。
 
 > 服务器需允许 HTTPS 或处于同一可信网络内，否则可能无法连接。
 

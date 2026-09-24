@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api.dart';
+import '../credentials.dart';
 import '../l10n/app_localizations.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -52,11 +53,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    final credentials = Credentials();
+    final password = await credentials.readPassword();
+    final apiKey = await credentials.readApiKey();
+    if (!mounted) return;
     setState(() {
       _serverUrlController.text = prefs.getString('server_url') ?? '';
       _usernameController.text = prefs.getString('username') ?? '';
-      _passwordController.text = prefs.getString('password') ?? '';
-      _apiKeyController.text = prefs.getString('api_key') ?? '';
+      _passwordController.text = password ?? '';
+      _apiKeyController.text = apiKey ?? '';
       _isConnected = prefs.getBool('is_connected') ?? false;
     });
   }
@@ -65,8 +70,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('server_url', _serverUrlController.text.trim());
     await prefs.setString('username', _usernameController.text.trim());
-    await prefs.setString('password', _passwordController.text.trim());
-    await prefs.setString('api_key', _apiKeyController.text.trim());
+    await Credentials().writePassword(_passwordController.text.trim());
+    await Credentials().writeApiKey(_apiKeyController.text.trim());
     await prefs.setBool('is_connected', true);
   }
 
@@ -74,15 +79,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final prefs = await SharedPreferences.getInstance();
     // Only the server connection keys. Clearing everything would also wipe
     // the theme choice and the managed music folders.
-    for (final key in [
-      'server_url',
-      'username',
-      'password',
-      'api_key',
-      'is_connected',
-    ]) {
+    for (final key in ['server_url', 'username', 'is_connected']) {
       await prefs.remove(key);
     }
+    await Credentials().clear();
   }
 
   Future<void> _loadMusicDirs() async {
