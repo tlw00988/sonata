@@ -11,7 +11,7 @@ import '../main.dart' show audioHandler;
 class PlayerController extends ChangeNotifier {
   late final mk.Player _player;
   final PlayerState _state;
-  
+
   MusicRepository? _repository;
 
   PlayerState get state => _state;
@@ -20,14 +20,24 @@ class PlayerController extends ChangeNotifier {
     mk.MediaKit.ensureInitialized();
     _player = mk.Player();
     _setupListeners();
-    audioHandler.bind(_player, _state, _repository,
-        onNext: playNext, onPrevious: playPrevious);
+    audioHandler.bind(
+      _player,
+      _state,
+      _repository,
+      onNext: playNext,
+      onPrevious: playPrevious,
+    );
   }
 
   void setRepository(MusicRepository repository) {
     _repository = repository;
-    audioHandler.bind(_player, _state, _repository,
-        onNext: playNext, onPrevious: playPrevious);
+    audioHandler.bind(
+      _player,
+      _state,
+      _repository,
+      onNext: playNext,
+      onPrevious: playPrevious,
+    );
   }
 
   void _setupListeners() {
@@ -98,20 +108,18 @@ class PlayerController extends ChangeNotifier {
   Future<void> playTrack(Track track, {String? streamUrl}) async {
     try {
       _state.setError(null);
-      
-      final trackWithFullArt = track.copyWith(
-        coverArt: _getCoverArtUrl(track),
-      );
-      
+
+      final trackWithFullArt = track.copyWith(coverArt: _getCoverArtUrl(track));
+
       final url = streamUrl ?? _getStreamUrl(trackWithFullArt);
-      
+
       if (url.isEmpty) {
         throw Exception('No stream URL available');
       }
 
       await _player.open(mk.Media(url));
       _state.setCurrentTrack(trackWithFullArt);
-      
+
       _fetchLyrics(trackWithFullArt);
       audioHandler.setTrack(trackWithFullArt);
     } catch (e) {
@@ -202,7 +210,9 @@ class PlayerController extends ChangeNotifier {
   }
 
   Future<void> playQueue(List<Track> tracks, {int startIndex = 0}) async {
-    final tracksWithArt = tracks.map((t) => t.copyWith(coverArt: _getCoverArtUrl(t))).toList();
+    final tracksWithArt = tracks
+        .map((t) => t.copyWith(coverArt: _getCoverArtUrl(t)))
+        .toList();
     _state.setQueue(tracksWithArt, startIndex: startIndex);
     if (_state.currentTrack != null) {
       await playTrack(_state.currentTrack!);
@@ -232,7 +242,7 @@ class PlayerController extends ChangeNotifier {
 
   Future<void> toggleFavorite(Track track) async {
     if (_repository == null) return;
-    
+
     try {
       if (_state.isFavorite) {
         await _repository!.unstar(track.id);
@@ -248,7 +258,7 @@ class PlayerController extends ChangeNotifier {
 
   Future<void> scrobble(Track track) async {
     if (_repository == null) return;
-    
+
     try {
       await _repository!.scrobble(track.id);
     } catch (e) {

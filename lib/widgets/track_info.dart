@@ -34,19 +34,20 @@ class TrackInfo extends StatelessWidget {
         children: [
           Text(
             loc.noTrackPlaying,
-            style: titleStyle ?? TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-            ),
+            style:
+                titleStyle ??
+                TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             loc.selectTrackToPlay,
-            style: artistStyle ?? TextStyle(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
+            style:
+                artistStyle ??
+                TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
           ),
         ],
       );
@@ -58,37 +59,46 @@ class TrackInfo extends StatelessWidget {
       children: [
         Text(
           track!.title,
-          style: titleStyle ?? TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style:
+              titleStyle ??
+              TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          textAlign: alignment == CrossAxisAlignment.center ? TextAlign.center : TextAlign.start,
+          textAlign: alignment == CrossAxisAlignment.center
+              ? TextAlign.center
+              : TextAlign.start,
         ),
         SizedBox(height: spacing),
         Text(
           track!.artist,
-          style: artistStyle ?? TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontSize: 15,
-          ),
+          style:
+              artistStyle ??
+              TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 15),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          textAlign: alignment == CrossAxisAlignment.center ? TextAlign.center : TextAlign.start,
+          textAlign: alignment == CrossAxisAlignment.center
+              ? TextAlign.center
+              : TextAlign.start,
         ),
         if (track!.album.isNotEmpty) ...[
           SizedBox(height: spacing),
           Text(
             track!.album,
-            style: albumStyle ?? TextStyle(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-              fontSize: 13,
-            ),
+            style:
+                albumStyle ??
+                TextStyle(
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                  fontSize: 13,
+                ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textAlign: alignment == CrossAxisAlignment.center ? TextAlign.center : TextAlign.start,
+            textAlign: alignment == CrossAxisAlignment.center
+                ? TextAlign.center
+                : TextAlign.start,
           ),
         ],
       ],
@@ -165,11 +175,15 @@ class NowPlayingTrackInfo extends StatelessWidget {
             IconButton(
               icon: Icon(
                 isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: isFavorite ? colorScheme.error : colorScheme.onSurfaceVariant,
+                color: isFavorite
+                    ? colorScheme.error
+                    : colorScheme.onSurfaceVariant,
                 size: 24,
               ),
               onPressed: onFavoriteToggle,
-              tooltip: isFavorite ? loc.removeFromFavorites : loc.addToFavorites,
+              tooltip: isFavorite
+                  ? loc.removeFromFavorites
+                  : loc.addToFavorites,
             ),
           ],
         ],

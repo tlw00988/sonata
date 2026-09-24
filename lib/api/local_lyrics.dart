@@ -16,7 +16,10 @@ String? findLyricsFile(String audioPath) {
     final dot = file.path.lastIndexOf('.');
     if (dot <= 0) return null;
 
-    final base = file.path.substring(file.path.lastIndexOf(Platform.pathSeparator) + 1, dot);
+    final base = file.path.substring(
+      file.path.lastIndexOf(Platform.pathSeparator) + 1,
+      dot,
+    );
     final entries = dir.listSync(followLinks: false);
     for (final entry in entries) {
       if (entry is! File) continue;
@@ -97,7 +100,9 @@ String decodeLyricBytes(List<int> bytes) {
 
 final _tagLine = RegExp(r'^\[([A-Za-z#][A-Za-z0-9_]*):(.*)\]$');
 final _timeTag = RegExp(r'\[(\d{1,3}):(\d{1,2})(?:[.:](\d{1,4}))?\]');
-final _hourTimeTag = RegExp(r'\[(\d{1,3}):(\d{1,2}):(\d{1,2})(?:[.:](\d{1,4}))?\]');
+final _hourTimeTag = RegExp(
+  r'\[(\d{1,3}):(\d{1,2}):(\d{1,2})(?:[.:](\d{1,4}))?\]',
+);
 
 /// Reworks raw lyrics into the `[mm:ss.xx]` form the player parses.
 ///
@@ -139,15 +144,15 @@ String _shiftTimes(String line, int offsetMs) {
     final minutes = int.parse(m.group(2)!);
     final seconds = int.parse(m.group(3)!);
     final totalMs =
-        ((hours * 60 + minutes) * 60 + seconds) * 1000 + _fractionMs(m.group(4));
+        ((hours * 60 + minutes) * 60 + seconds) * 1000 +
+        _fractionMs(m.group(4));
     return _formatTimeTag(totalMs);
   });
 
   return withoutHours.replaceAllMapped(_timeTag, (m) {
     final minutes = int.parse(m.group(1)!);
     final seconds = int.parse(m.group(2)!);
-    final totalMs =
-        (minutes * 60 + seconds) * 1000 + _fractionMs(m.group(3));
+    final totalMs = (minutes * 60 + seconds) * 1000 + _fractionMs(m.group(3));
     return _formatTimeTag(totalMs - offsetMs);
   });
 }

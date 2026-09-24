@@ -36,8 +36,8 @@ class PlayerState extends ChangeNotifier {
   bool get isPaused => _playbackState == PlaybackState.paused;
   bool get hasQueue => _queue.isNotEmpty;
   bool get hasCurrentTrack => _currentTrack != null;
-  double get progress => _duration.inMilliseconds > 0 
-      ? _position.inMilliseconds / _duration.inMilliseconds 
+  double get progress => _duration.inMilliseconds > 0
+      ? _position.inMilliseconds / _duration.inMilliseconds
       : 0.0;
 
   String get formattedPosition => _formatDuration(_position);
@@ -97,10 +97,10 @@ class PlayerState extends ChangeNotifier {
   void moveQueueItem(int oldIndex, int newIndex) {
     if (oldIndex < 0 || oldIndex >= _queue.length) return;
     if (newIndex < 0 || newIndex >= _queue.length) return;
-    
+
     final item = _queue.removeAt(oldIndex);
     _queue.insert(newIndex, item);
-    
+
     if (oldIndex == _currentIndex) {
       _currentIndex = newIndex;
     } else if (oldIndex < _currentIndex && newIndex >= _currentIndex) {

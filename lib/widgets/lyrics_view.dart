@@ -59,7 +59,8 @@ class LyricsView extends StatelessWidget {
     final lines = _parseLyrics(lyrics!);
 
     return SingleChildScrollView(
-      padding: padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: lines.map((line) {
@@ -74,10 +75,7 @@ class LyricsView extends StatelessWidget {
           }
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Text(
-              line.text,
-              style: style ?? defaultStyle,
-            ),
+            child: Text(line.text, style: style ?? defaultStyle),
           );
         }).toList(),
       ),
@@ -87,11 +85,11 @@ class LyricsView extends StatelessWidget {
   List<_LyricLine> _parseLyrics(String lyrics) {
     final lines = <_LyricLine>[];
     final regex = RegExp(r'\[(\d{2}:\d{2}\.\d{2,3})\]');
-    
+
     for (final rawLine in lyrics.split('\n')) {
       final line = rawLine.trim();
       if (line.isEmpty) continue;
-      
+
       final matches = regex.allMatches(line);
       if (matches.isNotEmpty) {
         var lastEnd = 0;
@@ -201,8 +199,7 @@ class _CenteredSyncedLyricsState extends State<CenteredSyncedLyrics> {
     final viewportHeight = _scrollController.position.viewportDimension;
     final targetOffset = (index * 52.0) - (viewportHeight * 0.45);
 
-    _scrollController
-        .animateTo(
+    _scrollController.animateTo(
       targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
@@ -230,12 +227,15 @@ class _CenteredSyncedLyricsState extends State<CenteredSyncedLyrics> {
           final minutes = int.parse(match.group(1)!);
           final seconds = int.parse(match.group(2)!);
           final msStr = match.group(3)!;
-          final milliseconds =
-              msStr.length == 3 ? int.parse(msStr) : int.parse(msStr) * 10;
+          final milliseconds = msStr.length == 3
+              ? int.parse(msStr)
+              : int.parse(msStr) * 10;
           final timeMs = (minutes * 60 + seconds) * 1000 + milliseconds;
 
           if (textContent.trim().isNotEmpty) {
-            lines.add(_SyncedLyricLine(text: textContent.trim(), timeMs: timeMs));
+            lines.add(
+              _SyncedLyricLine(text: textContent.trim(), timeMs: timeMs),
+            );
           }
           textContent = '';
           lastEnd = match.end;
@@ -249,10 +249,10 @@ class _CenteredSyncedLyricsState extends State<CenteredSyncedLyrics> {
           final minutes = int.parse(lastMatch.group(1)!);
           final seconds = int.parse(lastMatch.group(2)!);
           final msStr = lastMatch.group(3)!;
-          final milliseconds =
-              msStr.length == 3 ? int.parse(msStr) : int.parse(msStr) * 10;
-          final timeMs =
-              (minutes * 60 + seconds) * 1000 + milliseconds + 500;
+          final milliseconds = msStr.length == 3
+              ? int.parse(msStr)
+              : int.parse(msStr) * 10;
+          final timeMs = (minutes * 60 + seconds) * 1000 + milliseconds + 500;
           lines.add(_SyncedLyricLine(text: textContent.trim(), timeMs: timeMs));
         }
       } else if (line.isNotEmpty) {
@@ -391,7 +391,7 @@ class _SyncedLyricsViewState extends State<SyncedLyricsView> {
   void _updateActiveIndex() {
     final positionMs = widget.currentPosition.inMilliseconds;
     int newIndex = -1;
-    
+
     for (int i = 0; i < _syncedLines.length; i++) {
       if (_syncedLines[i].timeMs <= positionMs) {
         newIndex = i;
@@ -399,7 +399,7 @@ class _SyncedLyricsViewState extends State<SyncedLyricsView> {
         break;
       }
     }
-    
+
     if (newIndex != _activeIndex) {
       setState(() {
         _activeIndex = newIndex;
@@ -410,37 +410,37 @@ class _SyncedLyricsViewState extends State<SyncedLyricsView> {
   List<_SyncedLine> _parseSyncedLyrics(String lyrics) {
     final lines = <_SyncedLine>[];
     final regex = RegExp(r'\[(\d{2}):(\d{2})\.(\d{2,3})\]');
-    
+
     for (final rawLine in lyrics.split('\n')) {
       final line = rawLine.trim();
       if (line.isEmpty) continue;
-      
+
       final matches = regex.allMatches(line);
       if (matches.isNotEmpty) {
         var lastEnd = 0;
         String textContent = '';
-        
+
         for (final match in matches) {
           if (match.start > lastEnd) {
             textContent += line.substring(lastEnd, match.start);
           }
-          
+
           final minutes = int.parse(match.group(1)!);
           final seconds = int.parse(match.group(2)!);
           final msStr = match.group(3)!;
-          final milliseconds = msStr.length == 3 
-              ? int.parse(msStr) 
+          final milliseconds = msStr.length == 3
+              ? int.parse(msStr)
               : int.parse(msStr) * 10;
-          
+
           final timeMs = (minutes * 60 + seconds) * 1000 + milliseconds;
-          
+
           if (textContent.trim().isNotEmpty) {
             lines.add(_SyncedLine(text: textContent.trim(), timeMs: timeMs));
           }
           textContent = '';
           lastEnd = match.end;
         }
-        
+
         if (lastEnd < line.length) {
           textContent += line.substring(lastEnd);
         }
@@ -449,8 +449,8 @@ class _SyncedLyricsViewState extends State<SyncedLyricsView> {
           final minutes = int.parse(lastMatch.group(1)!);
           final seconds = int.parse(lastMatch.group(2)!);
           final msStr = lastMatch.group(3)!;
-          final milliseconds = msStr.length == 3 
-              ? int.parse(msStr) 
+          final milliseconds = msStr.length == 3
+              ? int.parse(msStr)
               : int.parse(msStr) * 10;
           final timeMs = (minutes * 60 + seconds) * 1000 + milliseconds + 500;
           lines.add(_SyncedLine(text: textContent.trim(), timeMs: timeMs));
@@ -459,7 +459,7 @@ class _SyncedLyricsViewState extends State<SyncedLyricsView> {
         lines.add(_SyncedLine(text: line, timeMs: -1));
       }
     }
-    
+
     lines.sort((a, b) => a.timeMs.compareTo(b.timeMs));
     return lines;
   }
@@ -490,17 +490,19 @@ class _SyncedLyricsViewState extends State<SyncedLyricsView> {
     }
 
     return SingleChildScrollView(
-      padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding:
+          widget.padding ??
+          const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: _syncedLines.asMap().entries.map((entry) {
           final index = entry.key;
           final line = entry.value;
           final isActive = index == _activeIndex;
-          
+
           return AnimatedDefaultTextStyle(
             duration: const Duration(milliseconds: 200),
-            style: isActive 
+            style: isActive
                 ? (widget.activeStyle ?? defaultActiveStyle)
                 : (widget.style ?? defaultStyle),
             child: Padding(

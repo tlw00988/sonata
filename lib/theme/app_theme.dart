@@ -107,10 +107,7 @@ class AppTheme {
           backgroundColor: Colors.transparent,
         ),
       ),
-      iconTheme: const IconThemeData(
-        color: _gray700,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: _gray700, size: 24),
       sliderTheme: SliderThemeData(
         activeTrackColor: _amber600,
         inactiveTrackColor: _gray200,
@@ -122,11 +119,7 @@ class AppTheme {
         thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
         trackShape: const RoundedRectSliderTrackShape(),
       ),
-      dividerTheme: DividerThemeData(
-        color: _gray200,
-        thickness: 0.5,
-        space: 1,
-      ),
+      dividerTheme: DividerThemeData(color: _gray200, thickness: 0.5, space: 1),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -147,8 +140,14 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        unselectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: _white,
@@ -157,27 +156,95 @@ class AppTheme {
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const TextStyle(color: _amber600, fontSize: 12, fontWeight: FontWeight.w500);
+            return const TextStyle(
+              color: _amber600,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            );
           }
-          return const TextStyle(color: _gray500, fontSize: 12, fontWeight: FontWeight.w500);
+          return const TextStyle(
+            color: _gray500,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          );
         }),
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: _gray900, fontWeight: FontWeight.w300, fontSize: 57),
-        displayMedium: TextStyle(color: _gray900, fontWeight: FontWeight.w300, fontSize: 45),
-        displaySmall: TextStyle(color: _gray900, fontWeight: FontWeight.w400, fontSize: 36),
-        headlineLarge: TextStyle(color: _gray900, fontWeight: FontWeight.w600, fontSize: 32),
-        headlineMedium: TextStyle(color: _gray900, fontWeight: FontWeight.w600, fontSize: 28),
-        headlineSmall: TextStyle(color: _gray900, fontWeight: FontWeight.w600, fontSize: 24),
-        titleLarge: TextStyle(color: _gray900, fontWeight: FontWeight.w500, fontSize: 22),
-        titleMedium: TextStyle(color: _gray700, fontWeight: FontWeight.w500, fontSize: 16),
-        titleSmall: TextStyle(color: _gray700, fontWeight: FontWeight.w500, fontSize: 14),
-        bodyLarge: TextStyle(color: _gray700, fontWeight: FontWeight.w400, fontSize: 16),
-        bodyMedium: TextStyle(color: _gray700, fontWeight: FontWeight.w400, fontSize: 14),
-        bodySmall: TextStyle(color: _gray500, fontWeight: FontWeight.w400, fontSize: 12),
-        labelLarge: TextStyle(color: _gray700, fontWeight: FontWeight.w500, fontSize: 14),
-        labelMedium: TextStyle(color: _gray500, fontWeight: FontWeight.w500, fontSize: 12),
-        labelSmall: TextStyle(color: _gray500, fontWeight: FontWeight.w500, fontSize: 11),
+        displayLarge: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w300,
+          fontSize: 57,
+        ),
+        displayMedium: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w300,
+          fontSize: 45,
+        ),
+        displaySmall: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w400,
+          fontSize: 36,
+        ),
+        headlineLarge: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w600,
+          fontSize: 32,
+        ),
+        headlineMedium: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w600,
+          fontSize: 28,
+        ),
+        headlineSmall: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w600,
+          fontSize: 24,
+        ),
+        titleLarge: TextStyle(
+          color: _gray900,
+          fontWeight: FontWeight.w500,
+          fontSize: 22,
+        ),
+        titleMedium: TextStyle(
+          color: _gray700,
+          fontWeight: FontWeight.w500,
+          fontSize: 16,
+        ),
+        titleSmall: TextStyle(
+          color: _gray700,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        bodyLarge: TextStyle(
+          color: _gray700,
+          fontWeight: FontWeight.w400,
+          fontSize: 16,
+        ),
+        bodyMedium: TextStyle(
+          color: _gray700,
+          fontWeight: FontWeight.w400,
+          fontSize: 14,
+        ),
+        bodySmall: TextStyle(
+          color: _gray500,
+          fontWeight: FontWeight.w400,
+          fontSize: 12,
+        ),
+        labelLarge: TextStyle(
+          color: _gray700,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        labelMedium: TextStyle(
+          color: _gray500,
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
+        labelSmall: TextStyle(
+          color: _gray500,
+          fontWeight: FontWeight.w500,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -266,10 +333,7 @@ class AppTheme {
           backgroundColor: Colors.transparent,
         ),
       ),
-      iconTheme: const IconThemeData(
-        color: _slate300,
-        size: 24,
-      ),
+      iconTheme: const IconThemeData(color: _slate300, size: 24),
       sliderTheme: SliderThemeData(
         activeTrackColor: _amber400,
         inactiveTrackColor: _slate700,
@@ -306,8 +370,14 @@ class AppTheme {
         type: BottomNavigationBarType.fixed,
         showSelectedLabels: true,
         showUnselectedLabels: true,
-        selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-        unselectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+        selectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        unselectedLabelStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: _slate900,
@@ -316,27 +386,95 @@ class AppTheme {
         labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return const TextStyle(color: _amber400, fontSize: 12, fontWeight: FontWeight.w500);
+            return const TextStyle(
+              color: _amber400,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            );
           }
-          return const TextStyle(color: _slate300, fontSize: 12, fontWeight: FontWeight.w500);
+          return const TextStyle(
+            color: _slate300,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          );
         }),
       ),
       textTheme: const TextTheme(
-        displayLarge: TextStyle(color: _slate100, fontWeight: FontWeight.w300, fontSize: 57),
-        displayMedium: TextStyle(color: _slate100, fontWeight: FontWeight.w300, fontSize: 45),
-        displaySmall: TextStyle(color: _slate100, fontWeight: FontWeight.w400, fontSize: 36),
-        headlineLarge: TextStyle(color: _slate100, fontWeight: FontWeight.w600, fontSize: 32),
-        headlineMedium: TextStyle(color: _slate100, fontWeight: FontWeight.w600, fontSize: 28),
-        headlineSmall: TextStyle(color: _slate100, fontWeight: FontWeight.w600, fontSize: 24),
-        titleLarge: TextStyle(color: _slate100, fontWeight: FontWeight.w500, fontSize: 22),
-        titleMedium: TextStyle(color: _slate300, fontWeight: FontWeight.w500, fontSize: 16),
-        titleSmall: TextStyle(color: _slate300, fontWeight: FontWeight.w500, fontSize: 14),
-        bodyLarge: TextStyle(color: _slate300, fontWeight: FontWeight.w400, fontSize: 16),
-        bodyMedium: TextStyle(color: _slate300, fontWeight: FontWeight.w400, fontSize: 14),
-        bodySmall: TextStyle(color: _slate300, fontWeight: FontWeight.w400, fontSize: 12),
-        labelLarge: TextStyle(color: _slate300, fontWeight: FontWeight.w500, fontSize: 14),
-        labelMedium: TextStyle(color: _slate300, fontWeight: FontWeight.w500, fontSize: 12),
-        labelSmall: TextStyle(color: _slate300, fontWeight: FontWeight.w500, fontSize: 11),
+        displayLarge: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w300,
+          fontSize: 57,
+        ),
+        displayMedium: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w300,
+          fontSize: 45,
+        ),
+        displaySmall: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w400,
+          fontSize: 36,
+        ),
+        headlineLarge: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w600,
+          fontSize: 32,
+        ),
+        headlineMedium: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w600,
+          fontSize: 28,
+        ),
+        headlineSmall: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w600,
+          fontSize: 24,
+        ),
+        titleLarge: TextStyle(
+          color: _slate100,
+          fontWeight: FontWeight.w500,
+          fontSize: 22,
+        ),
+        titleMedium: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w500,
+          fontSize: 16,
+        ),
+        titleSmall: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        bodyLarge: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w400,
+          fontSize: 16,
+        ),
+        bodyMedium: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w400,
+          fontSize: 14,
+        ),
+        bodySmall: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w400,
+          fontSize: 12,
+        ),
+        labelLarge: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
+        labelMedium: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w500,
+          fontSize: 12,
+        ),
+        labelSmall: TextStyle(
+          color: _slate300,
+          fontWeight: FontWeight.w500,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -344,7 +482,7 @@ class AppTheme {
   static ThemeData withAccentColor(ThemeData base, Color accentColor) {
     final glowColor = _computeGlowColor(accentColor);
     final borderColor = _computeBorderColor(accentColor);
-    
+
     return base.copyWith(
       colorScheme: base.colorScheme.copyWith(
         primary: accentColor,
@@ -396,30 +534,36 @@ class AppTheme {
         indicatorColor: accentColor.withValues(alpha: 0.15),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w500);
+            return TextStyle(
+              color: accentColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            );
           }
-          return const TextStyle(color: _slate300, fontSize: 12, fontWeight: FontWeight.w500);
+          return const TextStyle(
+            color: _slate300,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          );
         }),
       ),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(
-          foregroundColor: accentColor,
-        ),
+        style: IconButton.styleFrom(foregroundColor: accentColor),
       ),
       cardTheme: base.cardTheme.copyWith(
         color: _slate900,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: accentColor.withValues(alpha: 0.15), width: 0.5),
+          side: BorderSide(
+            color: accentColor.withValues(alpha: 0.15),
+            width: 0.5,
+          ),
         ),
       ),
       appBarTheme: base.appBarTheme.copyWith(
         iconTheme: IconThemeData(color: accentColor),
       ),
-      iconTheme: IconThemeData(
-        color: _slate300,
-        size: 24,
-      ),
+      iconTheme: IconThemeData(color: _slate300, size: 24),
     );
   }
 
@@ -427,7 +571,7 @@ class AppTheme {
     final glowColor = _computeGlowColor(accentColor);
     final borderColor = _computeBorderColor(accentColor);
     final darkAccent = _darkenColor(accentColor);
-    
+
     return base.copyWith(
       colorScheme: base.colorScheme.copyWith(
         primary: accentColor,
@@ -479,20 +623,29 @@ class AppTheme {
         indicatorColor: accentColor.withValues(alpha: 0.12),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w500);
+            return TextStyle(
+              color: accentColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            );
           }
-          return const TextStyle(color: _gray500, fontSize: 12, fontWeight: FontWeight.w500);
+          return const TextStyle(
+            color: _gray500,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          );
         }),
       ),
       iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(
-          foregroundColor: accentColor,
-        ),
+        style: IconButton.styleFrom(foregroundColor: accentColor),
       ),
       cardTheme: base.cardTheme.copyWith(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: accentColor.withValues(alpha: 0.2), width: 0.5),
+          side: BorderSide(
+            color: accentColor.withValues(alpha: 0.2),
+            width: 0.5,
+          ),
         ),
       ),
       appBarTheme: base.appBarTheme.copyWith(
@@ -557,7 +710,10 @@ class DynamicColorExtension extends ThemeExtension<DynamicColorExtension> {
   }
 
   @override
-  DynamicColorExtension lerp(ThemeExtension<DynamicColorExtension>? other, double t) {
+  DynamicColorExtension lerp(
+    ThemeExtension<DynamicColorExtension>? other,
+    double t,
+  ) {
     if (other is! DynamicColorExtension) return this;
     return DynamicColorExtension(
       accentColor: Color.lerp(accentColor, other.accentColor, t)!,

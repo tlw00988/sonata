@@ -35,7 +35,9 @@ class QueueView extends StatelessWidget {
                 separatorBuilder: (context, index) => Divider(
                   height: 1,
                   thickness: 0.5,
-                  color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: 0.1),
                   indent: 72,
                   endIndent: 16,
                 ),
@@ -69,10 +71,7 @@ class QueueView extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             loc.queueEmpty,
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 16),
           ),
           const SizedBox(height: 8),
           Text(
@@ -175,15 +174,13 @@ class _QueueItem extends StatelessWidget {
                 width: 40,
                 child: Center(
                   child: isCurrent
-                      ? Icon(
-                          Icons.equalizer,
-                          size: 18,
-                          color: accentColor,
-                        )
+                      ? Icon(Icons.equalizer, size: 18, color: accentColor)
                       : Text(
                           '${index + 1}',
                           style: TextStyle(
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.5,
+                            ),
                             fontSize: 13,
                             fontFamily: 'monospace',
                           ),
@@ -199,19 +196,24 @@ class _QueueItem extends StatelessWidget {
                   color: colorScheme.surfaceVariant,
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: track.coverArt.isNotEmpty &&
+                child:
+                    track.coverArt.isNotEmpty &&
                         coverImageProvider(context, track.coverArt) != null
                     ? Image(
                         image: coverImageProvider(context, track.coverArt)!,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Icon(
                           Icons.music_note,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       )
                     : Icon(
                         Icons.music_note,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
               ),
               const SizedBox(width: 12),
@@ -226,7 +228,9 @@ class _QueueItem extends StatelessWidget {
                       style: TextStyle(
                         color: isCurrent ? accentColor : colorScheme.onSurface,
                         fontSize: 14,
-                        fontWeight: isCurrent ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isCurrent
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -251,7 +255,9 @@ class _QueueItem extends StatelessWidget {
                   Text(
                     track.formattedDuration,
                     style: TextStyle(
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.5,
+                      ),
                       fontSize: 11,
                       fontFamily: 'monospace',
                     ),
@@ -261,11 +267,16 @@ class _QueueItem extends StatelessWidget {
                     icon: Icon(
                       Icons.close,
                       size: 18,
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.5,
+                      ),
                     ),
                     onPressed: onRemove,
                     padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                    constraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 32,
+                    ),
                     tooltip: AppLocalizations.of(context)!.removeFromQueue,
                   ),
                 ],
@@ -313,11 +324,7 @@ class MiniQueueBar extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.queue_music,
-                size: 18,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.queue_music, size: 18, color: colorScheme.primary),
               const SizedBox(width: 8),
               Text(
                 loc.tracksRemaining(remaining),

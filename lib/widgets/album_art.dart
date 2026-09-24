@@ -56,8 +56,10 @@ class AlbumArt extends StatelessWidget {
                 width: size,
                 height: size,
                 fit: fit,
-                placeholder: (context, url) => _buildPlaceholder(context, radius),
-                errorWidget: (context, url, error) => _buildError(context, radius),
+                placeholder: (context, url) =>
+                    _buildPlaceholder(context, radius),
+                errorWidget: (context, url, error) =>
+                    _buildError(context, radius),
                 memCacheWidth: size.toInt(),
                 memCacheHeight: size.toInt(),
               ),
@@ -80,11 +82,15 @@ class AlbumArt extends StatelessWidget {
           ],
         ),
       ),
-      child: placeholder ?? Icon(
-        Icons.music_note,
-        size: size * 0.4,
-        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-      ),
+      child:
+          placeholder ??
+          Icon(
+            Icons.music_note,
+            size: size * 0.4,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
     );
   }
 
@@ -96,11 +102,15 @@ class AlbumArt extends StatelessWidget {
         borderRadius: radius,
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
       ),
-      child: errorWidget ?? Icon(
-        Icons.broken_image,
-        size: size * 0.4,
-        color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-      ),
+      child:
+          errorWidget ??
+          Icon(
+            Icons.broken_image,
+            size: size * 0.4,
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
     );
   }
 }
@@ -176,12 +186,16 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
       }
       if (kDebugMode) print('ThemeColor: extracting from $resolvedUrl');
       final imageProvider = isLocalCoverPath(resolvedUrl)
-          ? FileImage(resolvedUrl.startsWith('file://')
-              ? File.fromUri(Uri.parse(resolvedUrl))
-              : File(resolvedUrl))
+          ? FileImage(
+              resolvedUrl.startsWith('file://')
+                  ? File.fromUri(Uri.parse(resolvedUrl))
+                  : File(resolvedUrl),
+            )
           : CachedNetworkImageProvider(resolvedUrl) as ImageProvider;
-      _paletteGenerator = await PaletteGenerator.fromImageProvider(imageProvider);
-      
+      _paletteGenerator = await PaletteGenerator.fromImageProvider(
+        imageProvider,
+      );
+
       Color? extractedColor;
       if (_paletteGenerator!.vibrantColor != null) {
         extractedColor = _paletteGenerator!.vibrantColor!.color;
@@ -190,7 +204,7 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
       } else if (_paletteGenerator!.mutedColor != null) {
         extractedColor = _paletteGenerator!.mutedColor!.color;
       }
-      
+
       if (kDebugMode) print('ThemeColor: extracted ${extractedColor?.value}');
       widget.onColorExtracted?.call(extractedColor);
     } catch (e) {
@@ -204,8 +218,10 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
 Future<Color?> extractColorFromImageUrl(String imageUrl) async {
   try {
     final imageProvider = CachedNetworkImageProvider(imageUrl);
-    final paletteGenerator = await PaletteGenerator.fromImageProvider(imageProvider);
-    
+    final paletteGenerator = await PaletteGenerator.fromImageProvider(
+      imageProvider,
+    );
+
     if (paletteGenerator.vibrantColor != null) {
       return paletteGenerator.vibrantColor!.color;
     } else if (paletteGenerator.dominantColor != null) {

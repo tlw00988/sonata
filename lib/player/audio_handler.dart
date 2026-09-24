@@ -38,9 +38,15 @@ class MusicAudioHandler extends audio.BaseAudioHandler {
     _onPrevious = onPrevious;
 
     _subscriptions.add(_player!.stream.playing.listen((_) => _throttledSync()));
-    _subscriptions.add(_player!.stream.position.listen((_) => _throttledSync()));
-    _subscriptions.add(_player!.stream.duration.listen((_) => _throttledSync()));
-    _subscriptions.add(_player!.stream.buffering.listen((_) => _throttledSync()));
+    _subscriptions.add(
+      _player!.stream.position.listen((_) => _throttledSync()),
+    );
+    _subscriptions.add(
+      _player!.stream.duration.listen((_) => _throttledSync()),
+    );
+    _subscriptions.add(
+      _player!.stream.buffering.listen((_) => _throttledSync()),
+    );
   }
 
   void _throttledSync() {
@@ -68,14 +74,16 @@ class MusicAudioHandler extends audio.BaseAudioHandler {
           : await _downloadArt(track.id, coverRef);
     }
 
-    mediaItem.add(audio.MediaItem(
-      id: track.id,
-      title: track.title,
-      artist: track.artist,
-      album: track.album,
-      duration: Duration(seconds: track.duration),
-      artUri: artUri,
-    ));
+    mediaItem.add(
+      audio.MediaItem(
+        id: track.id,
+        title: track.title,
+        artist: track.artist,
+        album: track.album,
+        duration: Duration(seconds: track.duration),
+        artUri: artUri,
+      ),
+    );
     _syncState();
   }
 
@@ -112,26 +120,28 @@ class MusicAudioHandler extends audio.BaseAudioHandler {
     if (_player == null) return;
     final playing = _player!.state.playing;
     final position = _player!.state.position;
-    playbackState.add(audio.PlaybackState(
-      playing: playing,
-      updatePosition: position,
-      bufferedPosition: Duration.zero,
-      speed: 1.0,
-      processingState: _player!.state.buffering
-          ? audio.AudioProcessingState.buffering
-          : audio.AudioProcessingState.ready,
-      controls: [
-        audio.MediaControl.skipToPrevious,
-        if (playing) audio.MediaControl.pause else audio.MediaControl.play,
-        audio.MediaControl.stop,
-        audio.MediaControl.skipToNext,
-      ],
-      systemActions: const {
-        audio.MediaAction.seek,
-        audio.MediaAction.seekForward,
-        audio.MediaAction.seekBackward,
-      },
-    ));
+    playbackState.add(
+      audio.PlaybackState(
+        playing: playing,
+        updatePosition: position,
+        bufferedPosition: Duration.zero,
+        speed: 1.0,
+        processingState: _player!.state.buffering
+            ? audio.AudioProcessingState.buffering
+            : audio.AudioProcessingState.ready,
+        controls: [
+          audio.MediaControl.skipToPrevious,
+          if (playing) audio.MediaControl.pause else audio.MediaControl.play,
+          audio.MediaControl.stop,
+          audio.MediaControl.skipToNext,
+        ],
+        systemActions: const {
+          audio.MediaAction.seek,
+          audio.MediaAction.seekForward,
+          audio.MediaAction.seekBackward,
+        },
+      ),
+    );
   }
 
   @override

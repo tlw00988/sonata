@@ -33,8 +33,12 @@ class Playlist {
       coverArt: json['coverArt']?.toString() ?? '',
       songCount: int.tryParse(json['songCount']?.toString() ?? '0') ?? 0,
       duration: int.tryParse(json['duration']?.toString() ?? '0') ?? 0,
-      created: DateTime.tryParse(json['created']?.toString() ?? '') ?? DateTime.now(),
-      changed: DateTime.tryParse(json['changed']?.toString() ?? '') ?? DateTime.now(),
+      created:
+          DateTime.tryParse(json['created']?.toString() ?? '') ??
+          DateTime.now(),
+      changed:
+          DateTime.tryParse(json['changed']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 

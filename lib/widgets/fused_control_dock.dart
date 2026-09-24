@@ -51,7 +51,12 @@ class _FusedControlDockState extends State<FusedControlDock> {
     final isSmall = screenWidth < 500;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(isSmall ? 12 : 24, 0, isSmall ? 12 : 24, isSmall ? 12 : 16),
+      padding: EdgeInsets.fromLTRB(
+        isSmall ? 12 : 24,
+        0,
+        isSmall ? 12 : 24,
+        isSmall ? 12 : 16,
+      ),
       child: GestureDetector(
         onTapDown: (d) => _handleSeek(d, context),
         onHorizontalDragUpdate: (d) => _handleSeek(d, context),
@@ -142,15 +147,9 @@ class _FusedControlDockState extends State<FusedControlDock> {
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.3),
-          width: 0.5,
-        ),
+        border: Border.all(color: accent.withValues(alpha: 0.3), width: 0.5),
         boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.3),
-            blurRadius: 8,
-          ),
+          BoxShadow(color: accent.withValues(alpha: 0.3), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -173,8 +172,11 @@ class _FusedControlDockState extends State<FusedControlDock> {
                     color: Colors.black.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Icon(Icons.music_note,
-                      color: Colors.white54, size: 16),
+                  child: const Icon(
+                    Icons.music_note,
+                    color: Colors.white54,
+                    size: 16,
+                  ),
                 ),
               ),
             )
@@ -186,7 +188,11 @@ class _FusedControlDockState extends State<FusedControlDock> {
                 color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(6),
               ),
-              child: const Icon(Icons.music_note, color: Colors.white54, size: 16),
+              child: const Icon(
+                Icons.music_note,
+                color: Colors.white54,
+                size: 16,
+              ),
             ),
           const SizedBox(width: 8),
           ConstrainedBox(
@@ -254,12 +260,7 @@ class _FusedControlDockState extends State<FusedControlDock> {
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 8,
-                  ),
-                ],
+                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
               ),
               child: Icon(
                 widget.playerState.isPlaying
@@ -295,8 +296,8 @@ class _FusedControlDockState extends State<FusedControlDock> {
     final volumeIcon = widget.playerState.volume > 0.5
         ? Icons.volume_up_rounded
         : widget.playerState.volume > 0
-            ? Icons.volume_down_rounded
-            : Icons.volume_off_rounded;
+        ? Icons.volume_down_rounded
+        : Icons.volume_off_rounded;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -338,14 +339,15 @@ class _FusedControlDockState extends State<FusedControlDock> {
             ),
           ),
         ],
-        if (isSmall)
-          _buildVolumeToggle(volumeIcon, accent),
+        if (isSmall) _buildVolumeToggle(volumeIcon, accent),
         // Heart
         if (widget.onFavoriteToggle != null)
           GestureDetector(
             onTap: widget.onFavoriteToggle,
             child: Icon(
-              widget.playerState.isFavorite ? Icons.favorite : Icons.favorite_border,
+              widget.playerState.isFavorite
+                  ? Icons.favorite
+                  : Icons.favorite_border,
               size: 14,
               color: widget.playerState.isFavorite
                   ? const Color(0xFFF43F5E)
@@ -420,12 +422,18 @@ class _FusedControlDockState extends State<FusedControlDock> {
                       child: SliderTheme(
                         data: SliderThemeData(
                           trackHeight: 2,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 5,
+                          ),
                           overlayColor: Colors.white.withValues(alpha: 0.1),
                           activeTrackColor: Colors.white70,
-                          inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+                          inactiveTrackColor: Colors.white.withValues(
+                            alpha: 0.2,
+                          ),
                           thumbColor: Colors.white,
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 12,
+                          ),
                         ),
                         child: Slider(
                           value: widget.playerState.volume,

@@ -19,7 +19,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _apiKeyController = TextEditingController();
-  
+
   bool _isConnected = false;
   bool _isTesting = false;
   String? _connectionError;
@@ -179,29 +179,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final auth = apiKey.isNotEmpty
           ? SubsonicAuth(username: 'unused', apiKey: apiKey)
-          : SubsonicAuth(
-              username: username,
-              password: password,
-            );
+          : SubsonicAuth(username: username, password: password);
       final client = SubsonicClient(
         baseUrl: _serverUrlController.text.trim().replaceAll(RegExp(r'/$'), ''),
         auth: auth,
       );
-      
+
       final result = await client.ping();
-      
+
       if (!mounted) return;
-      
+
       setState(() {
         _isConnected = result;
         _connectionError = result ? null : loc.connectionFailed;
         if (result) {
           _saveSettings();
-          updateRepo(
-            _serverUrlController.text.trim(),
-            username,
-            password,
-          );
+          updateRepo(_serverUrlController.text.trim(), username, password);
         }
       });
     } catch (e) {
@@ -253,11 +246,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Navidrome/OpenSubsonic Section
             _buildSectionHeader(loc.navidromeSection),
             const SizedBox(height: 16),
-            
+
             _buildTextField(
               controller: _serverUrlController,
               label: loc.serverUrl,
@@ -265,7 +258,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               prefixIcon: Icons.link,
             ),
             const SizedBox(height: 16),
-            
+
             _buildTextField(
               controller: _usernameController,
               label: loc.username,
@@ -273,7 +266,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               prefixIcon: Icons.person,
             ),
             const SizedBox(height: 16),
-            
+
             _buildTextField(
               controller: _passwordController,
               label: loc.password,
@@ -282,7 +275,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               obscureText: true,
             ),
             const SizedBox(height: 16),
-            
+
             _buildTextField(
               controller: _apiKeyController,
               label: loc.apiKey,
@@ -290,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               prefixIcon: Icons.vpn_key,
             ),
             const SizedBox(height: 24),
-            
+
             if (_connectionError != null)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -301,7 +294,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.error_outline, color: colorScheme.error, size: 20),
+                    Icon(
+                      Icons.error_outline,
+                      color: colorScheme.error,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -312,7 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-            
+
             if (_isConnected)
               Container(
                 padding: const EdgeInsets.all(12),
@@ -323,7 +320,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: colorScheme.primary, size: 20),
+                    Icon(
+                      Icons.check_circle,
+                      color: colorScheme.primary,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
@@ -334,7 +335,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -369,22 +370,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
             const SizedBox(height: 32),
-            
+
             // Appearance Section
             _buildSectionHeader(loc.appearance),
             const SizedBox(height: 16),
-            
+
             _buildThemeModeTile(context),
             const SizedBox(height: 32),
 
             // Local Music Section
             _buildLocalMusicSection(),
             const SizedBox(height: 32),
-            
+
             // About Section
             _buildSectionHeader(loc.about),
             const SizedBox(height: 16),
-            
+
             _buildSettingTile(
               icon: Icons.info_outline,
               title: loc.version,
@@ -436,10 +437,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 8),
         Text(
           loc.localMusicDirsHint,
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
         ),
         const SizedBox(height: 16),
         if (!_musicDirsLoaded)
@@ -537,18 +535,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   path,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
                 ),
                 if (isMissing)
                   Text(
                     loc.folderMissing,
-                    style: TextStyle(
-                      color: colorScheme.error,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: colorScheme.error, fontSize: 12),
                   ),
               ],
             ),
@@ -575,7 +567,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool obscureText = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -594,7 +586,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           style: TextStyle(color: colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+            hintStyle: TextStyle(
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+            ),
             prefixIcon: Icon(prefixIcon, color: colorScheme.onSurfaceVariant),
             filled: true,
             fillColor: colorScheme.surfaceContainerHighest,
@@ -616,7 +610,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(color: colorScheme.error),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
           ),
         ),
       ],
@@ -630,7 +627,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VoidCallback? onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -698,7 +695,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final currentMode = context.read<ThemeMode>();
-    
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
@@ -765,7 +762,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     : colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant, size: 22),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurfaceVariant,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(

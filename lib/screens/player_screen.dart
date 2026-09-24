@@ -48,14 +48,14 @@ class _PlayerScreenState extends State<PlayerScreen>
       duration: const Duration(milliseconds: 320),
       vsync: this,
     );
-    _drawerSlideAnimation = Tween<Offset>(
-      begin: const Offset(1, 0),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _drawerController,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    ));
+    _drawerSlideAnimation =
+        Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _drawerController,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          ),
+        );
     _backdropOpacityAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _drawerController, curve: Curves.easeOut),
     );
@@ -97,9 +97,17 @@ class _PlayerScreenState extends State<PlayerScreen>
                     Expanded(
                       child: isWide
                           ? _buildWideLayout(
-                              context, playerState, themeColor, track)
+                              context,
+                              playerState,
+                              themeColor,
+                              track,
+                            )
                           : _buildNarrowLayout(
-                              context, playerState, themeColor, track),
+                              context,
+                              playerState,
+                              themeColor,
+                              track,
+                            ),
                     ),
 
                     // Fused bottom dock
@@ -118,7 +126,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildAmbientBackground(
-      PlayerState playerState, Color themeColor, Track? track) {
+    PlayerState playerState,
+    Color themeColor,
+    Track? track,
+  ) {
     return AnimatedBuilder(
       animation: _glowAnimation,
       builder: (context, _) {
@@ -139,9 +150,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 ),
               // Dark blur overlay
               Positioned.fill(
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.75),
-                ),
+                child: Container(color: Colors.black.withValues(alpha: 0.75)),
               ),
               // Gaussian blur
               if (track != null &&
@@ -154,7 +163,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                       fit: BoxFit.cover,
                       alignment: Alignment.center,
                       filterQuality: FilterQuality.low,
-                    errorBuilder: (ctx, err, st) => const SizedBox(),
+                      errorBuilder: (ctx, err, st) => const SizedBox(),
                     ),
                   ),
                 ),
@@ -181,7 +190,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: themeColor.withValues(
-                        alpha: 0.4 * _glowAnimation.value),
+                      alpha: 0.4 * _glowAnimation.value,
+                    ),
                   ),
                 ),
               ),
@@ -195,7 +205,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: themeColor.withValues(
-                        alpha: 0.3 * _glowAnimation.value),
+                      alpha: 0.3 * _glowAnimation.value,
+                    ),
                   ),
                 ),
               ),
@@ -223,8 +234,12 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context, PlayerState playerState,
-      Color themeColor, Track? track) {
+  Widget _buildHeader(
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+    Track? track,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final isSmall = MediaQuery.of(context).size.width < 500;
 
@@ -275,8 +290,12 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildWideLayout(BuildContext context, PlayerState playerState,
-      Color themeColor, Track? track) {
+  Widget _buildWideLayout(
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+    Track? track,
+  ) {
     return Row(
       children: [
         // Left: Lyrics panel (~58%)
@@ -293,8 +312,12 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildNarrowLayout(BuildContext context, PlayerState playerState,
-      Color themeColor, Track? track) {
+  Widget _buildNarrowLayout(
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+    Track? track,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmall = screenWidth < 500;
     final artSize = isSmall ? screenWidth * 0.5 : screenWidth * 0.45;
@@ -305,16 +328,24 @@ class _PlayerScreenState extends State<PlayerScreen>
         child: Column(
           children: [
             SizedBox(height: isSmall ? 16 : 24),
-            _buildAlbumArt(context, playerState, themeColor, track,
-                size: artSize),
+            _buildAlbumArt(
+              context,
+              playerState,
+              themeColor,
+              track,
+              size: artSize,
+            ),
             SizedBox(height: isSmall ? 16 : 24),
-            _buildTrackMetadata(context, themeColor, track,
-                compact: isSmall),
+            _buildTrackMetadata(context, themeColor, track, compact: isSmall),
             SizedBox(height: isSmall ? 16 : 24),
             SizedBox(
               height: isSmall ? 220 : 300,
-              child: _buildLyricsPanel(context, playerState, themeColor,
-                  compact: isSmall),
+              child: _buildLyricsPanel(
+                context,
+                playerState,
+                themeColor,
+                compact: isSmall,
+              ),
             ),
             SizedBox(height: isSmall ? 8 : 16),
           ],
@@ -324,8 +355,11 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildLyricsPanel(
-      BuildContext context, PlayerState playerState, Color themeColor,
-      {bool compact = false}) {
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor, {
+    bool compact = false,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 40),
       child: CenteredSyncedLyrics(
@@ -337,8 +371,12 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildAlbumPanel(BuildContext context, PlayerState playerState,
-      Color themeColor, Track? track) {
+  Widget _buildAlbumPanel(
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+    Track? track,
+  ) {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
       child: Column(
@@ -353,9 +391,13 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildAlbumArt(BuildContext context, PlayerState playerState,
-      Color themeColor, Track? track,
-      {double size = 380}) {
+  Widget _buildAlbumArt(
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+    Track? track, {
+    double size = 380,
+  }) {
     return AnimatedBuilder(
       animation: _floatAnimation,
       builder: (context, child) {
@@ -401,8 +443,11 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildTrackMetadata(
-      BuildContext context, Color themeColor, Track? track,
-      {bool compact = false}) {
+    BuildContext context,
+    Color themeColor,
+    Track? track, {
+    bool compact = false,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -437,8 +482,12 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  Widget _buildFusedDock(BuildContext context, PlayerState playerState,
-      Color themeColor, Track? track) {
+  Widget _buildFusedDock(
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+    Track? track,
+  ) {
     return FusedControlDock(
       playerState: playerState,
       themeColor: themeColor,
@@ -450,8 +499,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       onVolumeChanged: (v) => context.read<PlayerController>().setVolume(v),
       onSeek: (progress) {
         final pos = Duration(
-          milliseconds:
-              (playerState.duration.inMilliseconds * progress).round(),
+          milliseconds: (playerState.duration.inMilliseconds * progress)
+              .round(),
         );
         context.read<PlayerController>().seek(pos);
       },
@@ -480,7 +529,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildPlaylistDrawer(
-      BuildContext context, PlayerState playerState, Color themeColor) {
+    BuildContext context,
+    PlayerState playerState,
+    Color themeColor,
+  ) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isNarrow = screenWidth < 600;
 
@@ -512,19 +564,21 @@ class _PlayerScreenState extends State<PlayerScreen>
           right: 0,
           bottom: 0,
           child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 1),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(
-              parent: _drawerController,
-              curve: Curves.easeOutCubic,
-              reverseCurve: Curves.easeInCubic,
-            )),
+            position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(
+                  CurvedAnimation(
+                    parent: _drawerController,
+                    curve: Curves.easeOutCubic,
+                    reverseCurve: Curves.easeInCubic,
+                  ),
+                ),
             child: Container(
               height: MediaQuery.of(context).size.height * 0.55,
               decoration: BoxDecoration(
                 color: const Color(0xFF120F0D),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.5),
@@ -552,7 +606,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                       children: [
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.upNextCount(playerState.queue.length),
+                            AppLocalizations.of(
+                              context,
+                            )!.upNextCount(playerState.queue.length),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -562,7 +618,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white54,
+                            size: 20,
+                          ),
                           onPressed: () => _drawerController.reverse(),
                         ),
                       ],
@@ -584,7 +644,10 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildSideDrawer(BuildContext context, PlayerState playerState) {
-    final drawerWidth = math.min(420.0, MediaQuery.of(context).size.width * 0.65);
+    final drawerWidth = math.min(
+      420.0,
+      MediaQuery.of(context).size.width * 0.65,
+    );
     return Stack(
       children: [
         GestureDetector(
@@ -626,7 +689,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                       children: [
                         Expanded(
                           child: Text(
-                            AppLocalizations.of(context)!.upNextCount(playerState.queue.length),
+                            AppLocalizations.of(
+                              context,
+                            )!.upNextCount(playerState.queue.length),
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
@@ -636,7 +701,11 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white54,
+                            size: 20,
+                          ),
                           onPressed: () => _drawerController.reverse(),
                         ),
                       ],

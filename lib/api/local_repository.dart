@@ -8,18 +8,36 @@ import '../models/models.dart';
 
 class LocalFileRepository {
   static const List<String> _audioExtensions = [
-    '.mp3', '.flac', '.wav', '.ogg', '.m4a', '.aac', '.opus', '.wma',
-    '.ape', '.aif', '.aiff',
+    '.mp3',
+    '.flac',
+    '.wav',
+    '.ogg',
+    '.m4a',
+    '.aac',
+    '.opus',
+    '.wma',
+    '.ape',
+    '.aif',
+    '.aiff',
   ];
 
   /// Cover images commonly placed next to an album's tracks, in preference
   /// order. Matched case-insensitively within the track's own folder.
   static const List<String> _sidecarCovers = [
-    'cover', 'folder', 'front', 'album', 'albumart', 'album_art', 'art',
+    'cover',
+    'folder',
+    'front',
+    'album',
+    'albumart',
+    'album_art',
+    'art',
   ];
 
   static const List<String> _sidecarCoverExtensions = [
-    '.jpg', '.jpeg', '.png', '.webp',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
   ];
 
   /// Directory listings keyed by parent path, so scanning one album folder
@@ -138,7 +156,10 @@ class LocalFileRepository {
 
   Future<void> _scanDirectory(Directory dir, List<Track> tracks) async {
     try {
-      await for (final entity in dir.list(recursive: true, followLinks: false)) {
+      await for (final entity in dir.list(
+        recursive: true,
+        followLinks: false,
+      )) {
         if (entity is File) {
           final extension = '.${entity.path.split('.').last.toLowerCase()}';
           if (_audioExtensions.contains(extension)) {
@@ -196,7 +217,8 @@ class LocalFileRepository {
 
     if (metadata != null) {
       title = _firstNonEmpty(metadata.title) ?? fallback.title;
-      artist = _firstNonEmpty(metadata.artist) ??
+      artist =
+          _firstNonEmpty(metadata.artist) ??
           _firstNonEmpty(metadata.albumArtist) ??
           (fallback.artist ?? unknownArtist);
       album = _firstNonEmpty(metadata.album) ?? unknownAlbum;
@@ -271,8 +293,8 @@ class LocalFileRepository {
       final extension = chosen.mimetype.contains('png')
           ? '.png'
           : chosen.mimetype.contains('webp')
-              ? '.webp'
-              : '.jpg';
+          ? '.webp'
+          : '.jpg';
       final coverFile = File(
         '${coverDir.path}/${stableLocalId(path)}$extension',
       );

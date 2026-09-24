@@ -25,14 +25,15 @@ class LibraryScreen extends StatefulWidget {
   State<LibraryScreen> createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderStateMixin {
+class _LibraryScreenState extends State<LibraryScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   MusicRepository? _repository;
   final LocalFileRepository _localRepository = LocalFileRepository();
   bool _isLoading = false;
   bool _isScanningLocal = false;
   String? _error;
-  
+
   // Data
   List<Track> _songs = [];
   List<Album> _albums = [];
@@ -72,7 +73,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
 
   Future<void> _loadAllData() async {
     if (_repository == null) return;
-    
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -83,12 +84,12 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
       final albumsFuture = _repository!.getAlbums(size: 500);
       final artistsFuture = _repository!.getArtists(size: 500);
       final playlistsFuture = _repository!.getPlaylists();
-      
+
       final songs = await songsFuture;
       final albums = await albumsFuture;
       final artists = await artistsFuture;
       final playlists = await playlistsFuture;
-      
+
       if (!mounted) return;
       setState(() {
         _songs = songs;
@@ -115,7 +116,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     setState(() {
       _isScanningLocal = true;
     });
-    
+
     try {
       final tracks = await _localRepository.scanForAudioFiles();
       if (!mounted) return;
@@ -168,14 +169,14 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     }
   }
 
-Future<void> _pickAudioFiles() async {
+  Future<void> _pickAudioFiles() async {
     final loc = AppLocalizations.of(context)!;
     try {
       final files = await FilePicker.platform.pickFiles(
         type: FileType.audio,
         allowMultiple: true,
       );
-      
+
       if (files != null && files.files.isNotEmpty) {
         final tracks = <Track>[];
         for (final file in files.files) {
@@ -237,11 +238,19 @@ Future<void> _pickAudioFiles() async {
                         )
                       else
                         IconButton(
-                          icon: Icon(Icons.refresh, color: colorScheme.onSurface, size: 26),
+                          icon: Icon(
+                            Icons.refresh,
+                            color: colorScheme.onSurface,
+                            size: 26,
+                          ),
                           onPressed: _refresh,
                         ),
                       IconButton(
-                        icon: Icon(Icons.search, color: colorScheme.onSurface, size: 26),
+                        icon: Icon(
+                          Icons.search,
+                          color: colorScheme.onSurface,
+                          size: 26,
+                        ),
                         onPressed: () => _showSearch(context),
                       ),
                     ],
@@ -249,20 +258,26 @@ Future<void> _pickAudioFiles() async {
                 ],
               ),
             ),
-            
+
             // Connection status / error
             if (_error != null)
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 color: colorScheme.errorContainer,
                 child: Text(
                   _error!,
-                  style: TextStyle(color: colorScheme.onErrorContainer, fontSize: 13),
+                  style: TextStyle(
+                    color: colorScheme.onErrorContainer,
+                    fontSize: 13,
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
-            
+
             // Tab bar
             TabBar(
               controller: _tabController,
@@ -272,8 +287,14 @@ Future<void> _pickAudioFiles() async {
               indicatorWeight: 3,
               labelColor: colorScheme.onSurface,
               unselectedLabelColor: colorScheme.onSurfaceVariant,
-              labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              labelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+              ),
               tabs: [
                 Tab(text: loc.songsTab),
                 Tab(text: loc.albumsTab),
@@ -282,7 +303,7 @@ Future<void> _pickAudioFiles() async {
                 Tab(text: loc.localFilesTab),
               ],
             ),
-            
+
             // Tab content
             Expanded(
               child: TabBarView(
@@ -305,11 +326,12 @@ Future<void> _pickAudioFiles() async {
   Widget _buildSongsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_songs.isEmpty) return _buildEmptyState(
-      icon: Icons.music_note_outlined,
-      title: loc.noSongs,
-      subtitle: _error ?? loc.noSongsHint,
-    );
+    if (_songs.isEmpty)
+      return _buildEmptyState(
+        icon: Icons.music_note_outlined,
+        title: loc.noSongs,
+        subtitle: _error ?? loc.noSongsHint,
+      );
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -338,18 +360,27 @@ Future<void> _pickAudioFiles() async {
   Widget _buildAlbumsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_albums.isEmpty) return _buildEmptyState(
-      icon: Icons.album_outlined,
-      title: loc.noAlbums,
-      subtitle: _error ?? loc.noAlbumsHint,
-    );
+    if (_albums.isEmpty)
+      return _buildEmptyState(
+        icon: Icons.album_outlined,
+        title: loc.noAlbums,
+        subtitle: _error ?? loc.noAlbumsHint,
+      );
 
     return RefreshIndicator(
       onRefresh: _refresh,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
-          final crossAxisCount = width > 1200 ? 6 : width > 900 ? 5 : width > 600 ? 4 : width > 400 ? 3 : 2;
+          final crossAxisCount = width > 1200
+              ? 6
+              : width > 900
+              ? 5
+              : width > 600
+              ? 4
+              : width > 400
+              ? 3
+              : 2;
           return GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -375,11 +406,12 @@ Future<void> _pickAudioFiles() async {
   Widget _buildArtistsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_artists.isEmpty) return _buildEmptyState(
-      icon: Icons.person_outline,
-      title: loc.noArtists,
-      subtitle: _error ?? loc.noArtistsHint,
-    );
+    if (_artists.isEmpty)
+      return _buildEmptyState(
+        icon: Icons.person_outline,
+        title: loc.noArtists,
+        subtitle: _error ?? loc.noArtistsHint,
+      );
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -407,13 +439,14 @@ Future<void> _pickAudioFiles() async {
   Widget _buildPlaylistsTab() {
     final loc = AppLocalizations.of(context)!;
     if (_isLoading) return _buildLoadingIndicator();
-    if (_playlists.isEmpty) return _buildEmptyState(
-      icon: Icons.queue_music_outlined,
-      title: loc.noPlaylists,
-      subtitle: _error ?? loc.noPlaylistsHint,
-      actionLabel: loc.createPlaylist,
-      onAction: () {},
-    );
+    if (_playlists.isEmpty)
+      return _buildEmptyState(
+        icon: Icons.queue_music_outlined,
+        title: loc.noPlaylists,
+        subtitle: _error ?? loc.noPlaylistsHint,
+        actionLabel: loc.createPlaylist,
+        onAction: () {},
+      );
 
     return RefreshIndicator(
       onRefresh: _refresh,
@@ -452,7 +485,9 @@ Future<void> _pickAudioFiles() async {
               separatorBuilder: (context, index) => Divider(
                 height: 1,
                 thickness: 0.5,
-                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.outline.withValues(alpha: 0.1),
                 indent: 72,
                 endIndent: 16,
               ),
@@ -462,7 +497,11 @@ Future<void> _pickAudioFiles() async {
                     padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        Icon(Icons.folder, color: Theme.of(context).colorScheme.primary, size: 28),
+                        Icon(
+                          Icons.folder,
+                          color: Theme.of(context).colorScheme.primary,
+                          size: 28,
+                        ),
                         const SizedBox(width: 12),
                         Text(
                           loc.localTracksCount(_localTracks.length),
@@ -474,12 +513,22 @@ Future<void> _pickAudioFiles() async {
                         ),
                         const Spacer(),
                         IconButton(
-                          icon: Icon(Icons.create_new_folder, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          icon: Icon(
+                            Icons.create_new_folder,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                           onPressed: _scanFolder,
                           tooltip: loc.scanFolder,
                         ),
                         IconButton(
-                          icon: Icon(Icons.file_open, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          icon: Icon(
+                            Icons.file_open,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
                           onPressed: _pickAudioFiles,
                           tooltip: loc.addAudioFiles,
                         ),
@@ -491,7 +540,12 @@ Future<void> _pickAudioFiles() async {
                           )
                         else
                           IconButton(
-                            icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            icon: Icon(
+                              Icons.refresh,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
                             onPressed: _scanLocalFiles,
                             tooltip: loc.rescan,
                           ),
@@ -538,7 +592,7 @@ Future<void> _pickAudioFiles() async {
     VoidCallback? onSecondAction,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -624,7 +678,8 @@ Future<void> _pickAudioFiles() async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AlbumDetailScreen(album: album, repository: _repository!),
+        builder: (context) =>
+            AlbumDetailScreen(album: album, repository: _repository!),
       ),
     );
   }
@@ -633,7 +688,8 @@ Future<void> _pickAudioFiles() async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ArtistDetailScreen(artist: artist, repository: _repository!),
+        builder: (context) =>
+            ArtistDetailScreen(artist: artist, repository: _repository!),
       ),
     );
   }
@@ -642,7 +698,8 @@ Future<void> _pickAudioFiles() async {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PlaylistDetailScreen(playlist: playlist, repository: _repository!),
+        builder: (context) =>
+            PlaylistDetailScreen(playlist: playlist, repository: _repository!),
       ),
     );
   }
@@ -659,15 +716,13 @@ Future<void> _pickAudioFiles() async {
 class _MusicSearchDelegate extends SearchDelegate<String> {
   final MusicRepository? _repository;
 
-  _MusicSearchDelegate({required MusicRepository? repository}) : _repository = repository;
+  _MusicSearchDelegate({required MusicRepository? repository})
+    : _repository = repository;
 
   @override
   List<Widget> buildActions(BuildContext context) {
     return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () => query = '',
-      ),
+      IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
     ];
   }
 
@@ -692,7 +747,7 @@ class _MusicSearchDelegate extends SearchDelegate<String> {
   Widget _buildSearchResults(BuildContext context, {bool playOnTap = false}) {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     if (query.isEmpty) {
       return Center(
         child: Column(
@@ -731,7 +786,7 @@ class _MusicSearchDelegate extends SearchDelegate<String> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-        
+
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -740,9 +795,9 @@ class _MusicSearchDelegate extends SearchDelegate<String> {
             ),
           );
         }
-        
+
         final tracks = snapshot.data ?? [];
-        
+
         if (tracks.isEmpty) {
           return Center(
             child: Text(
@@ -751,7 +806,7 @@ class _MusicSearchDelegate extends SearchDelegate<String> {
             ),
           );
         }
-        
+
         return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: tracks.length,
@@ -759,7 +814,12 @@ class _MusicSearchDelegate extends SearchDelegate<String> {
             final track = tracks[index];
             return ListTile(
               leading: track.coverArt.isNotEmpty
-                  ? Image.network(_resolveCoverArt(context, track.coverArt), width: 48, height: 48, fit: BoxFit.cover)
+                  ? Image.network(
+                      _resolveCoverArt(context, track.coverArt),
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                    )
                   : Icon(Icons.music_note, color: colorScheme.onSurfaceVariant),
               title: Text(track.title),
               subtitle: Text('${track.artist} • ${track.album}'),
@@ -792,7 +852,7 @@ class _LibraryTrackTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -804,7 +864,8 @@ class _LibraryTrackTile extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: track.coverArt.isNotEmpty &&
+                child:
+                    track.coverArt.isNotEmpty &&
                         coverImageProvider(context, track.coverArt) != null
                     ? Image(
                         image: coverImageProvider(context, track.coverArt)!,
@@ -816,7 +877,12 @@ class _LibraryTrackTile extends StatelessWidget {
                         width: 48,
                         height: 48,
                         color: colorScheme.surfaceContainerHighest,
-                        child: Icon(Icons.music_note, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3)),
+                        child: Icon(
+                          Icons.music_note,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
                       ),
               ),
               const SizedBox(width: 12),
@@ -856,7 +922,11 @@ class _LibraryTrackTile extends StatelessWidget {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.add, color: colorScheme.onSurfaceVariant, size: 20),
+                icon: Icon(
+                  Icons.add,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
+                ),
                 onPressed: onAddToQueue,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -873,15 +943,12 @@ class _AlbumGridTile extends StatelessWidget {
   final Album album;
   final VoidCallback onTap;
 
-  const _AlbumGridTile({
-    required this.album,
-    required this.onTap,
-  });
+  const _AlbumGridTile({required this.album, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -892,7 +959,9 @@ class _AlbumGridTile extends StatelessWidget {
           children: [
             Expanded(
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
                 child: album.coverArt.isNotEmpty
                     ? Image.network(
                         _resolveCoverArt(context, album.coverArt),
@@ -904,7 +973,9 @@ class _AlbumGridTile extends StatelessWidget {
                         child: Icon(
                           Icons.album,
                           size: 48,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
               ),
@@ -940,16 +1011,13 @@ class _ArtistListTile extends StatelessWidget {
   final Artist artist;
   final VoidCallback onTap;
 
-  const _ArtistListTile({
-    required this.artist,
-    required this.onTap,
-  });
+  const _ArtistListTile({required this.artist, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -965,7 +1033,12 @@ class _ArtistListTile extends StatelessWidget {
                     ? NetworkImage(_resolveCoverArt(context, artist.coverArt))
                     : null,
                 child: artist.coverArt.isEmpty
-                    ? Icon(Icons.person, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3))
+                    ? Icon(
+                        Icons.person,
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                      )
                     : null,
               ),
               const SizedBox(width: 16),
@@ -1005,16 +1078,13 @@ class _PlaylistTile extends StatelessWidget {
   final Playlist playlist;
   final VoidCallback onTap;
 
-  const _PlaylistTile({
-    required this.playlist,
-    required this.onTap,
-  });
+  const _PlaylistTile({required this.playlist, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1043,7 +1113,9 @@ class _PlaylistTile extends StatelessWidget {
                         color: colorScheme.surfaceContainerHighest,
                         child: Icon(
                           Icons.queue_music,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.3,
+                          ),
                           size: 28,
                         ),
                       ),
@@ -1065,7 +1137,10 @@ class _PlaylistTile extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      loc.playlistStats(playlist.songCount, _formatDuration(playlist.duration)),
+                      loc.playlistStats(
+                        playlist.songCount,
+                        _formatDuration(playlist.duration),
+                      ),
                       style: TextStyle(
                         color: colorScheme.onSurfaceVariant,
                         fontSize: 12,
@@ -1136,7 +1211,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
@@ -1146,7 +1221,11 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
             pinned: true,
             backgroundColor: colorScheme.surface,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -1154,7 +1233,10 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   widget.album.coverArt.isNotEmpty
-                      ? Image.network(_resolveCoverArt(context, widget.album.coverArt), fit: BoxFit.cover)
+                      ? Image.network(
+                          _resolveCoverArt(context, widget.album.coverArt),
+                          fit: BoxFit.cover,
+                        )
                       : Container(color: colorScheme.surfaceContainerHighest),
                   Container(
                     decoration: BoxDecoration(
@@ -1199,13 +1281,19 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                     children: [
                       Text(
                         loc.songsCount(widget.album.songCount),
-                        style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(width: 16),
                       if (widget.album.year > 0)
                         Text(
                           '${widget.album.year}',
-                          style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13),
+                          style: TextStyle(
+                            color: colorScheme.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
                         ),
                     ],
                   ),
@@ -1217,7 +1305,10 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                         icon: const Icon(Icons.play_arrow, size: 20),
                         label: Text(loc.play),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1226,7 +1317,10 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                         icon: const Icon(Icons.add, size: 20),
                         label: Text(loc.addToQueue),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -1246,7 +1340,8 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen> {
                       return _LibraryTrackTile(
                         track: track,
                         onTap: () => _playTrack(context, index),
-                        onAddToQueue: () => context.read<PlayerController>().addToQueue(track),
+                        onAddToQueue: () =>
+                            context.read<PlayerController>().addToQueue(track),
                       );
                     }),
                 ],
@@ -1323,7 +1418,7 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
@@ -1333,7 +1428,11 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
             pinned: true,
             backgroundColor: colorScheme.surface,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -1341,7 +1440,10 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   widget.artist.coverArt.isNotEmpty
-                      ? Image.network(_resolveCoverArt(context, widget.artist.coverArt), fit: BoxFit.cover)
+                      ? Image.network(
+                          _resolveCoverArt(context, widget.artist.coverArt),
+                          fit: BoxFit.cover,
+                        )
                       : Container(color: colorScheme.surfaceContainerHighest),
                   Container(
                     decoration: BoxDecoration(
@@ -1375,24 +1477,34 @@ class _ArtistDetailScreenState extends State<ArtistDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    loc.artistStats(widget.artist.albumCount, widget.artist.songCount),
-                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+                    loc.artistStats(
+                      widget.artist.albumCount,
+                      widget.artist.songCount,
+                    ),
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   if (_isLoading)
                     const Center(child: CircularProgressIndicator())
                   else if (_albums.isEmpty)
-                    Text(loc.noAlbumsFound, style: TextStyle(color: colorScheme.onSurfaceVariant))
+                    Text(
+                      loc.noAlbumsFound,
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    )
                   else
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.85,
-                        crossAxisSpacing: 16,
-                        mainAxisSpacing: 16,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                          ),
                       itemCount: _albums.length,
                       itemBuilder: (context, index) {
                         final album = _albums[index];
@@ -1461,7 +1573,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
@@ -1471,7 +1583,11 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
             pinned: true,
             backgroundColor: colorScheme.surface,
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 24),
+              icon: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
             flexibleSpace: FlexibleSpaceBar(
@@ -1479,7 +1595,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                 fit: StackFit.expand,
                 children: [
                   widget.playlist.coverArt.isNotEmpty
-                      ? Image.network(_resolveCoverArt(context, widget.playlist.coverArt), fit: BoxFit.cover)
+                      ? Image.network(
+                          _resolveCoverArt(context, widget.playlist.coverArt),
+                          fit: BoxFit.cover,
+                        )
                       : Container(color: colorScheme.surfaceContainerHighest),
                   Container(
                     decoration: BoxDecoration(
@@ -1513,8 +1632,14 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    loc.playlistStats(widget.playlist.songCount, _formatDuration(widget.playlist.duration)),
-                    style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 14),
+                    loc.playlistStats(
+                      widget.playlist.songCount,
+                      _formatDuration(widget.playlist.duration),
+                    ),
+                    style: TextStyle(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -1524,7 +1649,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                         icon: const Icon(Icons.play_arrow, size: 20),
                         label: Text(loc.play),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -1533,7 +1661,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                         icon: const Icon(Icons.add, size: 20),
                         label: Text(loc.addToQueue),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -1542,7 +1673,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   if (_isLoading)
                     const Center(child: CircularProgressIndicator())
                   else if (_tracks.isEmpty)
-                    Text(loc.noTracksFound, style: TextStyle(color: colorScheme.onSurfaceVariant))
+                    Text(
+                      loc.noTracksFound,
+                      style: TextStyle(color: colorScheme.onSurfaceVariant),
+                    )
                   else
                     ..._tracks.asMap().entries.map((entry) {
                       final index = entry.key;
@@ -1550,7 +1684,8 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                       return _LibraryTrackTile(
                         track: track,
                         onTap: () => _playTrack(context, index),
-                        onAddToQueue: () => context.read<PlayerController>().addToQueue(track),
+                        onAddToQueue: () =>
+                            context.read<PlayerController>().addToQueue(track),
                       );
                     }),
                 ],
