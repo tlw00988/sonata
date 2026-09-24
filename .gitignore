@@ -31,7 +31,11 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
+**/build/
 /coverage/
+
+# One-off design mockups, not part of the app
+/desktop_music_player*.html
 
 # Symbolication related
 app.*.symbols
