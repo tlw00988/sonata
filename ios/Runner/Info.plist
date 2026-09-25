@@ -31,6 +31,8 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Sonata 需要访问本地网络，用来连接你自建的音乐服务器（Navidrome 等）。</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
