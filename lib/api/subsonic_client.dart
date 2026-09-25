@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'auth.dart';
@@ -58,20 +60,38 @@ class SubsonicClient {
     final response = await _dio.get(path, queryParameters: params);
     final data = response.data;
     if (data is Map<String, dynamic>) return data;
-    throw FormatException('Unexpected response type: ${data.runtimeType}');
+    // 常见于把网页地址填进来了：返回 200 + HTML。
+    throw FormatException(
+      '响应不是 JSON，实际是 ${data.runtimeType}'
+      '${data is String && data.trim().isNotEmpty ? '：${_clip(data)}' : ''}',
+    );
   }
 
-  Future<bool> ping() async {
+  Future<bool> ping() async => await pingWithReason() == null;
+
+  /// 探测服务器连通性：成功返回 `null`，失败返回一段可以直接放进
+  /// 提示框的原因（带请求地址与原始错误细节，方便没有控制台日志的
+  /// 构建 —— 比如未签名的 ipa —— 也能定位问题）。
+  Future<String?> pingWithReason() async {
+    // 地址里不含 query，凭据（t/s/apiKey）绝不进提示框。
+    final endpoint = '$baseUrl/rest/ping';
     try {
       final result = await _get('/rest/ping');
       final subsonicResponse = result['subsonic-response'];
-      if (subsonicResponse is Map<String, dynamic>) {
-        return subsonicResponse['status'] == 'ok';
+      if (subsonicResponse is! Map<String, dynamic>) {
+        final keys = result.keys.take(5).join(', ');
+        return '$endpoint — not a Subsonic response, got fields: $keys';
       }
-      return false;
+      if (subsonicResponse['status'] == 'ok') return null;
+      final error = subsonicResponse['error'];
+      final code = error is Map ? error['code'] : '?';
+      final message = error is Map
+          ? error['message']
+          : subsonicResponse['status'];
+      return '$endpoint — server rejected: $code $message';
     } catch (e) {
       if (kDebugMode) print('Ping failed: $e');
-      return false;
+      return '$endpoint — ${describeConnectionError(e)}';
     }
   }
 
@@ -362,4 +382,86 @@ class SubsonicClient {
         .map((json) => Track.fromJson(json as Map<String, dynamic>))
         .toList();
   }
+}
+
+/// 把连接异常翻译成一行人话，直接显示在设置页的提示框里。
+///
+/// 未签名的 ipa 拿不到控制台日志，所以这里必须给出可辨识的根因：
+/// 端口不通 / 超时 / 证书 / 401 / 响应不是 Subsonic 等。
+String describeConnectionError(Object e) {
+  if (e is DioException) {
+    final uri = e.requestOptions.uri;
+    final endpoint =
+        '${uri.scheme}://${uri.host}'
+        '${uri.hasPort ? ':${uri.port}' : ''}${uri.path}';
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return '连接超时（15 秒未响应）：$endpoint —— 服务器地址/端口可能不对，或不在同一网络';
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return '读写超时：$endpoint —— 服务器响应太慢或已挂起';
+      case DioExceptionType.badCertificate:
+        return 'TLS 证书校验失败：$endpoint —— 自签证书未被信任';
+      case DioExceptionType.connectionError:
+        final cause = e.error;
+        if (cause is SocketException) {
+          return '${_describeSocket(cause)}：$endpoint';
+        }
+        return '无法建立连接：$endpoint —— ${e.message ?? cause ?? '未知原因'}';
+      case DioExceptionType.badResponse:
+        final status = e.response?.statusCode;
+        final body = e.response?.data;
+        if (status == 401 || status == 403) {
+          return 'HTTP $status：$endpoint —— 用户名或密码/API Key 错误';
+        }
+        if (status == 404) {
+          return 'HTTP 404：$endpoint —— 路径不存在，服务器地址可能少了一段（如 /navidrome）';
+        }
+        final snippet = body is String
+            ? (body.isEmpty ? '' : '，响应：${_clip(body)}')
+            : '';
+        return 'HTTP ${status ?? '?'}：$endpoint$snippet';
+      case DioExceptionType.unknown:
+        final cause = e.error;
+        if (cause is HandshakeException || cause is CertificateException) {
+          return 'TLS 握手/证书失败：$endpoint —— $cause';
+        }
+        if (cause is SocketException) {
+          return '${_describeSocket(cause)}：$endpoint';
+        }
+        return '${e.message ?? '网络错误'}：$endpoint${cause == null ? '' : ' —— $cause'}';
+      case DioExceptionType.cancel:
+        return '请求被取消：$endpoint';
+      case DioExceptionType.transformTimeout:
+        return '响应解析超时：$endpoint —— 服务器响应太慢或已挂起';
+    }
+  }
+  if (e is SocketException) return _describeSocket(e);
+  if (e is HandshakeException || e is CertificateException) {
+    return 'TLS 握手/证书失败：$e';
+  }
+  if (e is HttpException) return 'HTTP 异常：$e';
+  if (e is FormatException) return '响应格式异常（不是 JSON）：$e';
+  return e.toString();
+}
+
+String _describeSocket(SocketException e) {
+  final code = e.osError?.errorCode;
+  final msg = e.osError?.message ?? e.message;
+  if (code == 61 || msg.contains('refused')) {
+    return '连接被拒绝（端口未开）—— 确认端口号，服务是否已启动';
+  }
+  if (code == 65 || msg.contains('No route') || msg.contains('unreachable')) {
+    return '无法路由到主机 —— 设备不在同一局域网，或 iOS 拒绝了本地网络权限';
+  }
+  if (code == 8 || msg.contains('nodename') || msg.contains('not known')) {
+    return '域名解析失败 —— 主机名写错或需要内网 DNS';
+  }
+  if (msg.contains('timed out')) return '连接超时 —— 地址不通或被防火墙丢包';
+  return '网络错误：$msg${code == null ? '' : '（errno $code）'}';
+}
+
+String _clip(String s) {
+  final flat = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return flat.length <= 160 ? flat : '${flat.substring(0, 160)}…';
 }

@@ -185,14 +185,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         auth: auth,
       );
 
-      final result = await client.ping();
+      final failure = await client.pingWithReason();
 
       if (!mounted) return;
 
       setState(() {
-        _isConnected = result;
-        _connectionError = result ? null : loc.connectionFailed;
-        if (result) {
+        _isConnected = failure == null;
+        _connectionError = failure == null
+            ? null
+            : loc.connectionError(
+                '$failure${_lanHint(_serverUrlController.text.trim())}',
+              );
+        if (failure == null) {
           _saveSettings();
           updateRepo(_serverUrlController.text.trim(), username, password);
         }
@@ -201,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       setState(() {
         _isConnected = false;
-        _connectionError = loc.connectionError(e.toString());
+        _connectionError = loc.connectionError(describeConnectionError(e));
       });
     } finally {
       if (mounted) {
@@ -210,6 +214,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         });
       }
     }
+  }
+
+  /// 局域网地址连接失败时，附带最可能的两条排查方向。
+  String _lanHint(String baseUrl) {
+    final host = Uri.tryParse(baseUrl)?.host ?? '';
+    final isLan =
+        host == 'localhost' ||
+        host == '127.0.0.1' ||
+        host.endsWith('.local') ||
+        RegExp(r'^10\.').hasMatch(host) ||
+        RegExp(r'^192\.168\.').hasMatch(host) ||
+        RegExp(r'^172\.(1[6-9]|2\d|3[01])\.').hasMatch(host);
+    if (!isLan) return '';
+    return '\n若服务器在局域网：确认手机与它在同一 Wi-Fi；'
+        'iOS 需允许 Sonata 使用本地网络'
+        '（设置 → Sonata → 本地网络）。';
   }
 
   Future<void> _disconnect() async {
