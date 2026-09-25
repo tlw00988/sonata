@@ -13,6 +13,15 @@ class PlayerController extends ChangeNotifier {
 
   MusicRepository? _repository;
 
+  /// 封面取色结果缓存，key 是已经解析好的封面地址。
+  ///
+  /// 循环播放回到同一首时直接复用上次的颜色（主题色继承），
+  /// 取色失败不写缓存，下一次播放同一封面时会自动重试。
+  final Map<String, Color?> _coverColorCache = {};
+
+  /// 自增令牌，用于丢弃已经切歌之后才返回的过期取色结果。
+  int _themeColorRequest = 0;
+
   PlayerState get state => _state;
 
   PlayerController({PlayerState? state}) : _state = state ?? PlayerState() {
@@ -75,6 +84,9 @@ class PlayerController extends ChangeNotifier {
 
   void _onCompletion() {
     if (_state.isRepeat && _state.currentTrack != null) {
+      // 单曲循环不换曲目，封面地址也没变，主动把主题色再套用一次，
+      // 避免循环回到同一首时主题色被清掉后不再恢复。
+      _syncThemeColor(_state.currentTrack!);
       seek(Duration.zero);
       play();
     } else {
@@ -118,6 +130,9 @@ class PlayerController extends ChangeNotifier {
 
       await _player.open(mk.Media(url));
       _state.setCurrentTrack(trackWithFullArt);
+      // 主题色在这里兜底：封面组件只在图片地址变化时才重新取色，
+      // 循环播放同一首时地址不变，必须由播放流程自己补上。
+      _syncThemeColor(trackWithFullArt);
 
       _fetchLyrics(trackWithFullArt);
       audioHandler.setTrack(trackWithFullArt);
@@ -233,6 +248,46 @@ class PlayerController extends ChangeNotifier {
 
   void updateThemeColor(Color? color) {
     _state.setThemeColor(color);
+  }
+
+  /// 让主题色跟随 [track] 的封面。
+  ///
+  /// 结果按封面地址缓存：命中缓存时同步生效，循环播放回到同一首可以立刻
+  /// 继承到上一次的主题色；未命中则异步取色，期间切换到别的曲目会被
+  /// [_themeColorRequest] 拦截，取色失败则保持当前主题色不变。
+  Future<void> _syncThemeColor(Track track) async {
+    final cover = _getCoverArtUrl(track);
+    if (cover.isEmpty) return;
+
+    final cached = _coverColorCache[cover];
+    if (cached != null) {
+      _applyThemeColor(cached);
+      return;
+    }
+
+    final request = ++_themeColorRequest;
+    final color = await _extractThemeColor(cover);
+    if (request != _themeColorRequest) return;
+    if (color == null) return;
+    _coverColorCache[cover] = color;
+    _applyThemeColor(color);
+  }
+
+  void _applyThemeColor(Color color) {
+    if (_state.themeColor != color) {
+      _state.setThemeColor(color);
+    }
+  }
+
+  Future<Color?> _extractThemeColor(String cover) async {
+    try {
+      final provider = coverColorImageProvider(cover);
+      if (provider == null) return null;
+      return await extractColorFromCover(provider);
+    } catch (e) {
+      if (kDebugMode) print('ThemeColor: extract failed: $e');
+      return null;
+    }
   }
 
   void updateLyrics(String? lyrics) {

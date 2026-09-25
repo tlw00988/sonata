@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:palette_generator/palette_generator.dart';
 import '../api/api.dart';
 
 class AlbumArt extends StatelessWidget {
@@ -134,7 +133,6 @@ class AlbumArtWithTheme extends StatefulWidget {
 }
 
 class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
-  PaletteGenerator? _paletteGenerator;
   bool _didExtract = false;
 
   @override
@@ -192,18 +190,7 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
                   : File(resolvedUrl),
             )
           : CachedNetworkImageProvider(resolvedUrl) as ImageProvider;
-      _paletteGenerator = await PaletteGenerator.fromImageProvider(
-        imageProvider,
-      );
-
-      Color? extractedColor;
-      if (_paletteGenerator!.vibrantColor != null) {
-        extractedColor = _paletteGenerator!.vibrantColor!.color;
-      } else if (_paletteGenerator!.dominantColor != null) {
-        extractedColor = _paletteGenerator!.dominantColor!.color;
-      } else if (_paletteGenerator!.mutedColor != null) {
-        extractedColor = _paletteGenerator!.mutedColor!.color;
-      }
+      final extractedColor = await extractColorFromCover(imageProvider);
 
       if (kDebugMode) {
         print('ThemeColor: extracted ${extractedColor?.toARGB32()}');
@@ -219,19 +206,7 @@ class _AlbumArtWithThemeState extends State<AlbumArtWithTheme> {
 // Helper to extract color from image URL without widget
 Future<Color?> extractColorFromImageUrl(String imageUrl) async {
   try {
-    final imageProvider = CachedNetworkImageProvider(imageUrl);
-    final paletteGenerator = await PaletteGenerator.fromImageProvider(
-      imageProvider,
-    );
-
-    if (paletteGenerator.vibrantColor != null) {
-      return paletteGenerator.vibrantColor!.color;
-    } else if (paletteGenerator.dominantColor != null) {
-      return paletteGenerator.dominantColor!.color;
-    } else if (paletteGenerator.mutedColor != null) {
-      return paletteGenerator.mutedColor!.color;
-    }
-    return null;
+    return await extractColorFromCover(CachedNetworkImageProvider(imageUrl));
   } catch (e) {
     return null;
   }

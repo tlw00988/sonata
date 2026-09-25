@@ -150,6 +150,7 @@ class PlayerState extends ChangeNotifier {
   }
 
   void setThemeColor(Color? color) {
+    if (_themeColor == color) return;
     _themeColor = color;
     notifyListeners();
   }

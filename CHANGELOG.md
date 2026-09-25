@@ -5,6 +5,17 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布]
+
+### 修复
+
+- **iOS 后台播放**：补齐 `UIBackgroundModes: audio`，并在启动时把音频会话
+  设为 `playback` 类别（此前为默认的 `soloAmbient`，切后台 / 锁屏即被系统挂起）
+- **iOS 连接自建服务器**：加入 ATS 例外（`NSAllowsArbitraryLoads`），
+  允许使用纯 http 地址的服务器，避免封面、歌词与接口被系统拦截
+- **封面取色**：主题色改由播放流程按封面地址取色并缓存，循环播放回到同一首时
+  主题色不再丢失，取色失败会在下次播放同一封面时自动重试
+
 ## [0.1.0] - 2026-09-24
 
 首个公开版本。
