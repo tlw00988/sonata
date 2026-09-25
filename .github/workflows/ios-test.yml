@@ -35,8 +35,25 @@ jobs:
       - name: Build iOS
         run: flutter build ipa --release --no-codesign
 
+      # --no-codesign 只出 .xcarchive，没有可直接安装的 ipa；
+      # 这里把它重新打包成标准 ipa（Payload/<App>.app 在压缩包根目录），
+      # 方便下载后交给 AltStore / TrollStore 等工具签名安装。
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -r build/ios/archive/Runner.xcarchive/Products/Applications/*.app Payload/
+          zip -qr Sonata.ipa Payload
+          rm -rf Payload
+
       - name: Upload iOS archive
         uses: actions/upload-artifact@v4
         with:
           name: Sonata-ios-archive
           path: build/ios/archive/Runner.xcarchive
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sonata-ipa
+          path: Sonata.ipa
+          if-no-files-found: error
