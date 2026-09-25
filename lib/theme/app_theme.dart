@@ -27,6 +27,9 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      // 遥控器方向键导航时没有鼠标指针，焦点必须一眼可见。
+      // 默认的 12% 黑在深色播放页上几乎看不出来。
+      focusColor: _amber600.withValues(alpha: 0.28),
       scaffoldBackgroundColor: _gray50,
       colorScheme: const ColorScheme.light(
         primary: _amber600,
@@ -253,6 +256,8 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      // 同 lightTheme：给遥控器用户一个能看清的焦点高亮。
+      focusColor: _amber400.withValues(alpha: 0.30),
       scaffoldBackgroundColor: _slate950,
       colorScheme: const ColorScheme.dark(
         primary: _amber400,

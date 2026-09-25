@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../player/player.dart';
 import '../models/models.dart';
 import '../api/api.dart';
@@ -18,6 +19,9 @@ class FusedControlDock extends StatefulWidget {
   final VoidCallback? onPlaylistToggle;
   final VoidCallback? onToggleTranslations;
 
+  /// 队列按钮的焦点节点：播放页用它把焦点从关闭的抽屉还回来。
+  final FocusNode? playlistToggleFocusNode;
+
   const FusedControlDock({
     super.key,
     required this.playerState,
@@ -32,6 +36,7 @@ class FusedControlDock extends StatefulWidget {
     this.onFavoriteToggle,
     this.onPlaylistToggle,
     this.onToggleTranslations,
+    this.playlistToggleFocusNode,
   });
 
   @override
@@ -40,6 +45,37 @@ class FusedControlDock extends StatefulWidget {
 
 class _FusedControlDockState extends State<FusedControlDock> {
   bool _volumeExpanded = false;
+
+  /// 时间显示当前是否持有焦点，用来画进度条的焦点描边。
+  bool _seekFocused = false;
+
+  /// 遥控器进度步长。长按方向键时系统会发 KeyRepeatEvent 连续快进。
+  static const int _seekStepMs = 5000;
+
+  /// 时间显示同时也是遥控器的进度条：左右键快退/快进，上下键照常把焦点
+  /// 移出这根进度条。返回 [KeyEventResult.handled] 才不会被应用级的
+  /// Shortcuts 接管成方向键移动焦点。
+  KeyEventResult _handleSeekKeys(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    final key = event.logicalKey;
+    if (key != LogicalKeyboardKey.arrowLeft &&
+        key != LogicalKeyboardKey.arrowRight) {
+      return KeyEventResult.ignored;
+    }
+    final duration = widget.playerState.duration;
+    // 还不知道总时长时也不能把焦点放走，否则按一下左右就"掉"到别处去了。
+    if (duration.inMilliseconds <= 0) return KeyEventResult.handled;
+
+    final current = widget.playerState.position.inMilliseconds;
+    final delta = key == LogicalKeyboardKey.arrowRight
+        ? _seekStepMs
+        : -_seekStepMs;
+    final next = (current + delta).clamp(0, duration.inMilliseconds).toDouble();
+    widget.onSeek(next / duration.inMilliseconds);
+    return KeyEventResult.handled;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -249,25 +285,35 @@ class _FusedControlDockState extends State<FusedControlDock> {
           onTap: widget.onPrevious,
         ),
         SizedBox(width: isSmall ? 8 : 12),
-        Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: widget.onPlayPause,
-            borderRadius: BorderRadius.circular(24),
-            child: Container(
-              width: isSmall ? 34 : 40,
-              height: isSmall ? 34 : 40,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white,
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
-              ),
-              child: Icon(
-                widget.playerState.isPlaying
-                    ? Icons.pause_rounded
-                    : Icons.play_arrow_rounded,
-                size: isSmall ? 18 : 22,
-                color: Colors.black,
+        _FocusRing(
+          radius: 24,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: widget.onPlayPause,
+              borderRadius: BorderRadius.circular(24),
+              // 白色圆钮正好填满 InkWell 时，描边会压在圆边上。留 3px 让
+              // 焦点环落在按钮外侧的深色底上，才看得出是焦点。
+              child: Padding(
+                padding: const EdgeInsets.all(3),
+                child: Container(
+                  width: isSmall ? 34 : 40,
+                  height: isSmall ? 34 : 40,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 8),
+                    ],
+                  ),
+                  child: Icon(
+                    widget.playerState.isPlaying
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    size: isSmall ? 18 : 22,
+                    color: Colors.black,
+                  ),
+                ),
               ),
             ),
           ),
@@ -302,17 +348,41 @@ class _FusedControlDockState extends State<FusedControlDock> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Time
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            '${widget.playerState.formattedPosition}/${widget.playerState.formattedDuration}',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 11,
-              fontFamily: 'monospace',
-              fontWeight: FontWeight.w500,
-            ),
+        // Time：触摸时只是显示，遥控器上聚焦后左右键就是进度条。
+        Focus(
+          onFocusChange: (focused) {
+            if (focused == _seekFocused) return;
+            setState(() => _seekFocused = focused);
+          },
+          onKeyEvent: _handleSeekKeys,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  '${widget.playerState.formattedPosition}/${widget.playerState.formattedDuration}',
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              // 描边叠在最上层且不参与布局，进度条拿到焦点时才看得见。
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _seekFocused ? Colors.white : Colors.transparent,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         if (!isSmall) ...[
@@ -342,45 +412,60 @@ class _FusedControlDockState extends State<FusedControlDock> {
         if (isSmall) _buildVolumeToggle(volumeIcon, accent),
         // Heart
         if (widget.onFavoriteToggle != null)
-          GestureDetector(
-            onTap: widget.onFavoriteToggle,
-            child: Icon(
-              widget.playerState.isFavorite
-                  ? Icons.favorite
-                  : Icons.favorite_border,
-              size: 14,
-              color: widget.playerState.isFavorite
-                  ? const Color(0xFFF43F5E)
-                  : Colors.white54,
+          _FocusRing(
+            radius: 6,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onFavoriteToggle,
+                borderRadius: BorderRadius.circular(6),
+                child: Icon(
+                  widget.playerState.isFavorite
+                      ? Icons.favorite
+                      : Icons.favorite_border,
+                  size: 14,
+                  color: widget.playerState.isFavorite
+                      ? const Color(0xFFF43F5E)
+                      : Colors.white54,
+                ),
+              ),
             ),
           ),
         const SizedBox(width: 10),
         // Playlist toggle
         if (widget.onPlaylistToggle != null)
-          GestureDetector(
-            onTap: widget.onPlaylistToggle,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(
-                  Icons.queue_music_rounded,
-                  size: 16,
-                  color: Colors.white54,
-                ),
-                if (widget.playerState.hasQueue)
-                  Positioned(
-                    top: -3,
-                    right: -3,
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: accent,
-                      ),
+          _FocusRing(
+            radius: 6,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: widget.onPlaylistToggle,
+                focusNode: widget.playlistToggleFocusNode,
+                borderRadius: BorderRadius.circular(6),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(
+                      Icons.queue_music_rounded,
+                      size: 16,
+                      color: Colors.white54,
                     ),
-                  ),
-              ],
+                    if (widget.playerState.hasQueue)
+                      Positioned(
+                        top: -3,
+                        right: -3,
+                        child: Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accent,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
       ],
@@ -388,65 +473,74 @@ class _FusedControlDockState extends State<FusedControlDock> {
   }
 
   Widget _buildVolumeToggle(IconData volumeIcon, Color accent) {
-    return GestureDetector(
-      onTap: () => setState(() => _volumeExpanded = !_volumeExpanded),
-      child: SizedBox(
-        width: 24,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Align(
-              alignment: Alignment.center,
-              child: Icon(volumeIcon, size: 14, color: Colors.white54),
-            ),
-            if (_volumeExpanded)
-              Positioned(
-                bottom: 26,
-                left: 0,
-                right: 0,
-                child: GestureDetector(
-                  onTap: () {},
-                  child: Container(
-                    height: 120,
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF120F0D).withValues(alpha: 0.95),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: RotatedBox(
-                      quarterTurns: -1,
-                      child: SliderTheme(
-                        data: SliderThemeData(
-                          trackHeight: 2,
-                          thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 5,
-                          ),
-                          overlayColor: Colors.white.withValues(alpha: 0.1),
-                          activeTrackColor: Colors.white70,
-                          inactiveTrackColor: Colors.white.withValues(
-                            alpha: 0.2,
-                          ),
-                          thumbColor: Colors.white,
-                          overlayShape: const RoundSliderOverlayShape(
-                            overlayRadius: 12,
+    return _FocusRing(
+      radius: 6,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _volumeExpanded = !_volumeExpanded),
+          borderRadius: BorderRadius.circular(6),
+          child: SizedBox(
+            width: 24,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Icon(volumeIcon, size: 14, color: Colors.white54),
+                ),
+                if (_volumeExpanded)
+                  Positioned(
+                    bottom: 26,
+                    left: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: () {},
+                      child: Container(
+                        height: 120,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFF120F0D,
+                          ).withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.15),
+                            width: 0.5,
                           ),
                         ),
-                        child: Slider(
-                          value: widget.playerState.volume,
-                          onChanged: widget.onVolumeChanged,
-                          min: 0,
-                          max: 1,
+                        child: RotatedBox(
+                          quarterTurns: -1,
+                          child: SliderTheme(
+                            data: SliderThemeData(
+                              trackHeight: 2,
+                              thumbShape: const RoundSliderThumbShape(
+                                enabledThumbRadius: 5,
+                              ),
+                              overlayColor: Colors.white.withValues(alpha: 0.1),
+                              activeTrackColor: Colors.white70,
+                              inactiveTrackColor: Colors.white.withValues(
+                                alpha: 0.2,
+                              ),
+                              thumbColor: Colors.white,
+                              overlayShape: const RoundSliderOverlayShape(
+                                overlayRadius: 12,
+                              ),
+                            ),
+                            child: Slider(
+                              value: widget.playerState.volume,
+                              onChanged: widget.onVolumeChanged,
+                              min: 0,
+                              max: 1,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -478,15 +572,69 @@ class _DockIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(4),
-          child: Icon(icon, size: size, color: color),
+    return _FocusRing(
+      radius: 16,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(icon, size: size, color: color),
+          ),
         ),
+      ),
+    );
+  }
+}
+
+/// 遥控器焦点描边。
+///
+/// 这层只负责"看得见"：`canRequestFocus: false` 让它退出焦点遍历，真正的
+/// 焦点仍然落在子控件的 FocusNode 上，方向键和回车照常工作（`onFocusChange`
+/// 监听的是 `hasFocus`，子节点拿到焦点时它也会亮）。
+///
+/// 描边用 `Positioned.fill` 叠在子节点上方，不参与布局，所以加上它不会
+/// 让紧凑的 dock 撑出溢出。深色背景上 Material 自带的 focusColor 太淡，
+/// 这里固定用白色以保证在播放页和浅色主题下都看得见。
+class _FocusRing extends StatefulWidget {
+  const _FocusRing({required this.child, this.radius = 12});
+
+  final Widget child;
+  final double radius;
+
+  @override
+  State<_FocusRing> createState() => _FocusRingState();
+}
+
+class _FocusRingState extends State<_FocusRing> {
+  bool _focused = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Focus(
+      canRequestFocus: false,
+      onFocusChange: (hasFocus) {
+        if (hasFocus == _focused) return;
+        setState(() => _focused = hasFocus);
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          widget.child,
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: _focused ? Colors.white : Colors.transparent,
+                  width: 1.5,
+                ),
+                borderRadius: BorderRadius.circular(widget.radius),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

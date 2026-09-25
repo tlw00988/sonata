@@ -25,6 +25,15 @@ class _PlayerScreenState extends State<PlayerScreen>
   late Animation<double> _backdropOpacityAnimation;
   bool _showTranslations = true;
 
+  /// 队列抽屉是否展开。遥控器返回键要先关抽屉、再走系统返回，所以这个
+  /// 状态必须是普通的字段，PopScope 的 canPop 才能在正确的时机读到。
+  bool _drawerOpen = false;
+
+  /// 打开抽屉后把焦点送到关闭按钮，否则焦点会留在被遮罩盖住的 dock 上，
+  /// 方向键看起来"没反应"。关闭时再把焦点还给 dock 上的队列按钮。
+  final FocusNode _drawerCloseNode = FocusNode(debugLabel: 'queue-close');
+  final FocusNode _playlistToggleNode = FocusNode(debugLabel: 'queue-toggle');
+
   @override
   void initState() {
     super.initState();
@@ -66,7 +75,33 @@ class _PlayerScreenState extends State<PlayerScreen>
     _floatController.dispose();
     _glowController.dispose();
     _drawerController.dispose();
+    _drawerCloseNode.dispose();
+    _playlistToggleNode.dispose();
     super.dispose();
+  }
+
+  void _openDrawer() {
+    if (_drawerOpen) return;
+    setState(() {
+      _drawerOpen = true;
+      _drawerController.forward();
+    });
+    // 抽屉要等这一帧重建完才挂上焦点节点。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_drawerOpen) return;
+      _drawerCloseNode.requestFocus();
+    });
+  }
+
+  void _closeDrawer() {
+    if (!_drawerOpen) return;
+    setState(() {
+      _drawerOpen = false;
+      _drawerController.reverse();
+    });
+    if (_playlistToggleNode.canRequestFocus) {
+      _playlistToggleNode.requestFocus();
+    }
   }
 
   @override
@@ -117,7 +152,15 @@ class _PlayerScreenState extends State<PlayerScreen>
               ),
 
               // Playlist drawer overlay
-              _buildPlaylistDrawer(context, playerState, themeColor),
+              PopScope(
+                // 遥控器返回键：抽屉开着时先关抽屉（canPop=false 不会走系统
+                // 返回），抽屉关着时返回键照常工作（退出/上一层）。
+                canPop: !_drawerOpen,
+                onPopInvokedWithResult: (didPop, _) {
+                  if (!didPop) _closeDrawer();
+                },
+                child: _buildPlaylistDrawer(context, playerState, themeColor),
+              ),
             ],
           ),
         );
@@ -507,13 +550,8 @@ class _PlayerScreenState extends State<PlayerScreen>
       onFavoriteToggle: track != null
           ? () => context.read<PlayerController>().toggleFavorite(track)
           : null,
-      onPlaylistToggle: () {
-        if (_drawerController.isCompleted) {
-          _drawerController.reverse();
-        } else {
-          _drawerController.forward();
-        }
-      },
+      onPlaylistToggle: _drawerOpen ? _closeDrawer : _openDrawer,
+      playlistToggleFocusNode: _playlistToggleNode,
       onToggleTranslations: () =>
           setState(() => _showTranslations = !_showTranslations),
     );
@@ -553,7 +591,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     return Stack(
       children: [
         GestureDetector(
-          onTap: () => _drawerController.reverse(),
+          onTap: _closeDrawer,
           child: Opacity(
             opacity: _backdropOpacityAnimation.value,
             child: Container(color: Colors.black54),
@@ -618,12 +656,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         ),
                         IconButton(
+                          autofocus: true,
+                          focusNode: _drawerCloseNode,
                           icon: const Icon(
                             Icons.close,
                             color: Colors.white54,
                             size: 20,
                           ),
-                          onPressed: () => _drawerController.reverse(),
+                          onPressed: _closeDrawer,
                         ),
                       ],
                     ),
@@ -651,7 +691,7 @@ class _PlayerScreenState extends State<PlayerScreen>
     return Stack(
       children: [
         GestureDetector(
-          onTap: () => _drawerController.reverse(),
+          onTap: _closeDrawer,
           child: Opacity(
             opacity: _backdropOpacityAnimation.value,
             child: Container(color: Colors.black54),
@@ -701,12 +741,14 @@ class _PlayerScreenState extends State<PlayerScreen>
                           ),
                         ),
                         IconButton(
+                          autofocus: true,
+                          focusNode: _drawerCloseNode,
                           icon: const Icon(
                             Icons.close,
                             color: Colors.white54,
                             size: 20,
                           ),
-                          onPressed: () => _drawerController.reverse(),
+                          onPressed: _closeDrawer,
                         ),
                       ],
                     ),

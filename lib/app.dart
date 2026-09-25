@@ -9,6 +9,7 @@ import 'theme/theme.dart';
 import 'player/player.dart';
 import 'screens/screens.dart';
 import 'api/api.dart';
+import 'widgets/tab_focus_scope.dart';
 
 class SonataApp extends StatefulWidget {
   const SonataApp({super.key});
@@ -285,7 +286,15 @@ class _MainNavigationState extends State<MainNavigation> {
       valueListenable: tabIndex,
       builder: (context, index, _) {
         return Scaffold(
-          body: IndexedStack(index: index, children: _screens),
+          // 隐藏的 tab 整棵子树退出焦点树，遥控器方向键才不会走到看不见
+          // 的界面上。详见 TabFocusScope。
+          body: IndexedStack(
+            index: index,
+            children: [
+              for (int i = 0; i < _screens.length; i++)
+                TabFocusScope(active: i == index, child: _screens[i]),
+            ],
+          ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: index,
             onDestinationSelected: (i) => tabIndex.value = i,
