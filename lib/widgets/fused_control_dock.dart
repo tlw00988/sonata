@@ -52,6 +52,22 @@ class _FusedControlDockState extends State<FusedControlDock> {
   /// 遥控器进度步长。长按方向键时系统会发 KeyRepeatEvent 连续快进。
   static const int _seekStepMs = 5000;
 
+  /// 小屏（紧凑）布局的宽度分界，与 PlayerScreen 保持一致。
+  static const double _compactBreakpoint = 500;
+
+  /// 显示药丸徽章所需的最小逻辑宽度。
+  ///
+  /// 徽章最大 198（左右内边距 20 + 图 30 + 间距 8 + 文本 140），加上中间
+  /// 控制键 206、右侧时间/音量/收藏/队列 240、内外水平留白 80，共约 724。
+  /// 宽度不够时先隐藏徽章，它只是装饰，标题和歌手在主界面同样看得到。
+  static const double _pillMinWidth = 740;
+
+  /// 使用内联音量滑条所需的最小逻辑宽度。
+  ///
+  /// 滑条比弹出式音量开关多占约 52px。宽度不够时改用弹出式开关（紧凑布局
+  /// 本来就是这么做的），否则 500~560 的窄窗口下右侧区域会溢出。
+  static const double _inlineVolumeMinWidth = 560;
+
   /// 时间显示同时也是遥控器的进度条：左右键快退/快进，上下键照常把焦点
   /// 移出这根进度条。返回 [KeyEventResult.handled] 才不会被应用级的
   /// Shortcuts 接管成方向键移动焦点。
@@ -84,7 +100,11 @@ class _FusedControlDockState extends State<FusedControlDock> {
     final accent = widget.themeColor ?? colorScheme.primary;
     final progress = widget.playerState.progress.clamp(0.0, 1.0);
     final screenWidth = MediaQuery.of(context).size.width;
-    final isSmall = screenWidth < 500;
+    final isSmall = screenWidth < _compactBreakpoint;
+    // 横向空间不够时先舍弃装饰性内容，保证中间播放键和右侧进度/收藏/队列
+    // 始终完整可见（否则 Row 会溢出画出一条黑条）。
+    final showPill = !isSmall && screenWidth >= _pillMinWidth;
+    final showInlineVolume = !isSmall && screenWidth >= _inlineVolumeMinWidth;
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -157,14 +177,18 @@ class _FusedControlDockState extends State<FusedControlDock> {
                   padding: EdgeInsets.symmetric(horizontal: isSmall ? 12 : 16),
                   child: Row(
                     children: [
-                      if (!isSmall) ...[
+                      if (showPill) ...[
                         _buildPillBadge(accent, loc),
                         const Spacer(),
                       ],
                       _buildCenterControls(accent, isSmall: isSmall),
                       const Spacer(),
-                      Flexible(
-                        child: _buildRightSection(accent, isSmall: isSmall),
+                      // 右侧（时间/音量/收藏/队列）不参与弹性分配：让它按自身
+                      // 完整宽度布局并贴住右边缘，只由两个 Spacer 吸收剩余空间。
+                      // 之前它和两个 Spacer 三等分，窄一点就会被挤到放不下而溢出。
+                      _buildRightSection(
+                        accent,
+                        showInlineVolume: showInlineVolume,
                       ),
                     ],
                   ),
@@ -338,7 +362,7 @@ class _FusedControlDockState extends State<FusedControlDock> {
     );
   }
 
-  Widget _buildRightSection(Color accent, {bool isSmall = false}) {
+  Widget _buildRightSection(Color accent, {bool showInlineVolume = true}) {
     final volumeIcon = widget.playerState.volume > 0.5
         ? Icons.volume_up_rounded
         : widget.playerState.volume > 0
@@ -385,7 +409,7 @@ class _FusedControlDockState extends State<FusedControlDock> {
             ],
           ),
         ),
-        if (!isSmall) ...[
+        if (showInlineVolume) ...[
           const SizedBox(width: 12),
           Icon(volumeIcon, size: 14, color: Colors.white54),
           SizedBox(
@@ -409,7 +433,7 @@ class _FusedControlDockState extends State<FusedControlDock> {
             ),
           ),
         ],
-        if (isSmall) _buildVolumeToggle(volumeIcon, accent),
+        if (!showInlineVolume) _buildVolumeToggle(volumeIcon, accent),
         // Heart
         if (widget.onFavoriteToggle != null)
           _FocusRing(
