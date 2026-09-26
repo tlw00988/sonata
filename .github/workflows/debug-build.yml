@@ -7,6 +7,10 @@ name: Debug Build
 
 on:
   push:
+    branches:
+      # 限成分支：打 v* tag 时 Release 工作流已经会出正式包，
+      # 这里再跑一遍纯属重复（on: push 不加分支过滤时 tag 推送也会触发）。
+      - '**'
   workflow_dispatch:
 
 permissions:

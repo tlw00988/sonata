@@ -101,8 +101,55 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      # Release 签名凭据从 Secrets 还原成 android/key.properties + keystore，
+      # 两者都被 android/.gitignore 忽略，不会进仓库。
+      # build.gradle.kts 要求四项齐了才用 release 签名，缺任何一个就退回
+      # debug 签名——所以四个 secret 没配齐时这里直接跳过，Release 照样能绿，
+      # 配好之后下一次打 tag 自动生效。
+      - name: Restore keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "::warning::Android keystore secrets 未配齐，本次 APK 退回 debug 签名"
+            exit 0
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/upload-keystore.jks
+          # storeFile 相对 android/ 目录解析（rootProject.file）
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "upload-keystore.jks" \
+            "$ANDROID_KEYSTORE_PASSWORD" \
+            "$ANDROID_KEY_ALIAS" \
+            "$ANDROID_KEY_PASSWORD" \
+            > android/key.properties
+          echo "keystore restored: android/upload-keystore.jks (keyAlias=$ANDROID_KEY_ALIAS)"
+
       - name: Build APK
         run: flutter build apk --release
+
+      # 打印签名证书的持有者，方便确认是不是自己的 keystore（配没配 Secrets
+      # 一眼能看出：debug keystore 还是 CN=你的名字）。
+      # 用 apksigner 而不是 keytool——AGP 出的包只有 v2/v3 签名，没有 v1
+      # JAR 签名，keytool 会报"不是已签名的 jar 文件"。
+      - name: Show APK signer
+        run: |
+          set -euo pipefail
+          APK=build/app/outputs/flutter-apk/app-release.apk
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$SDK" ] || [ ! -d "$SDK/build-tools" ]; then
+            echo "::warning::没找到 Android SDK，跳过签名校验"
+            exit 0
+          fi
+          APKSIGNER="$(find "$SDK/build-tools" -name apksigner -type f | sort -V | tail -1 || true)"
+          if [ -z "$APKSIGNER" ]; then
+            echo "::warning::找不到 apksigner，跳过签名校验"
+            exit 0
+          fi
+          "$APKSIGNER" verify --print-certs "$APK"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

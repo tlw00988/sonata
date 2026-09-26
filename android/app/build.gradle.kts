@@ -46,6 +46,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // 启动器里的应用名，来自 AndroidManifest 的 ${appName}；debug 构建在
+        // 下面覆盖成别的名字，方便区分两个同时装着的包。
+        manifestPlaceholders["appName"] = "Sonata"
     }
 
     signingConfigs {
@@ -67,6 +70,14 @@ android {
                 } else {
                     signingConfigs.getByName("debug")
                 }
+        }
+        debug {
+            // 调试包用独立包名，跟正式包在设备上并存，互不覆盖；连带启动器
+            // 里也换个名字，否则两个图标长得一模一样分不清。
+            // 注意：首装后原来那份调试包里的服务器地址 / 凭据不会自动搬过来
+            // （shared_preferences 与 flutter_secure_storage 都是按包名隔离的）。
+            applicationIdSuffix = ".debug"
+            manifestPlaceholders["appName"] = "Sonata Debug"
         }
     }
 }
