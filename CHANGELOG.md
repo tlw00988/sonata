@@ -34,6 +34,18 @@
   配合 `FocusManager.addEarlyKeyEventHandler`（真正停掉焦点链的那个），只用
   一个钩子会漏：前者吞掉事件并不会阻止焦点系统继续处理。
 
+### 变更
+
+- **依赖升级**：`file_picker` 10 → 13、`flutter_secure_storage` 10 → 11、
+  `media_kit_video` 1 → 2，以及 12 个传递依赖的小版本（含两个已被撤回的
+  `material_ui` 1.3.0 与 `cupertino_ui` 1.1.0）。`file_picker` 的 API 同步
+  跟进：`FilePicker.platform` 改成 `FilePicker` 上的静态方法，`pickFiles`
+  直接返回文件列表（取消＝空列表），`allowMultiple` 参数已被移除
+- `dynamic_color` 仍留在 1.9：2.x 的 `DynamicColorBuilder` 交回的是
+  `package:material_ui` 的 `ColorScheme`，跟 `flutter/material` 的是两个类，
+  没法喂给 `ThemeData`；升它得自己重写一遍 corepalette → `ColorScheme` 的
+  转换，等 Flutter 侧统一后再升
+
 ### 修复
 
 - **iOS 后台播放**：补齐 `UIBackgroundModes: audio`，并在启动时把音频会话

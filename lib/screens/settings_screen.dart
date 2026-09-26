@@ -113,9 +113,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _addMusicDir() async {
     final loc = AppLocalizations.of(context)!;
-    final path = await FilePicker.platform.getDirectoryPath(
-      dialogTitle: loc.addFolder,
-    );
+    final path = await FilePicker.getDirectoryPath(dialogTitle: loc.addFolder);
     if (path == null || !mounted) return;
 
     final saved = await _localRepository.saveScanDirectories([

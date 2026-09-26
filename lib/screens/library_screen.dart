@@ -178,7 +178,7 @@ class _LibraryScreenState extends State<LibraryScreen>
 
   Future<void> _scanFolder() async {
     final loc = AppLocalizations.of(context)!;
-    final dirPath = await FilePicker.platform.getDirectoryPath(
+    final dirPath = await FilePicker.getDirectoryPath(
       dialogTitle: loc.selectFolderToScan,
     );
     if (dirPath == null) return;
@@ -214,14 +214,11 @@ class _LibraryScreenState extends State<LibraryScreen>
   Future<void> _pickAudioFiles() async {
     final loc = AppLocalizations.of(context)!;
     try {
-      final files = await FilePicker.platform.pickFiles(
-        type: FileType.audio,
-        allowMultiple: true,
-      );
+      final files = await FilePicker.pickFiles(type: FileType.audio);
 
-      if (files != null && files.files.isNotEmpty) {
+      if (files.isNotEmpty) {
         final tracks = <Track>[];
-        for (final file in files.files) {
+        for (final file in files) {
           final path = file.path;
           if (path == null || path.isEmpty) continue;
           final track = await _localRepository.trackFromFile(
