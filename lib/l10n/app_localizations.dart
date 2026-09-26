@@ -122,6 +122,18 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get settingsTab;
 
+  /// No description provided for @tvControlHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Control mode · OK to select · Back to exit'**
+  String get tvControlHint;
+
+  /// No description provided for @tvNavigationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Menu held · ↑ Library · ↓ Playlists · ←→ Albums'**
+  String get tvNavigationHint;
+
   /// No description provided for @libraryTitle.
   ///
   /// In en, this message translates to:

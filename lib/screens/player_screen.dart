@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../player/player.dart';
+import '../tv/tv.dart';
 import '../widgets/widgets.dart';
 import '../models/models.dart';
 import '../api/api.dart';
@@ -33,6 +34,44 @@ class _PlayerScreenState extends State<PlayerScreen>
   /// 方向键看起来"没反应"。关闭时再把焦点还给 dock 上的队列按钮。
   final FocusNode _drawerCloseNode = FocusNode(debugLabel: 'queue-close');
   final FocusNode _playlistToggleNode = FocusNode(debugLabel: 'queue-toggle');
+
+  /// 控件模式的落点：按确定键进入控件模式时焦点先落到这里。
+  final FocusNode _playFocusNode = FocusNode(debugLabel: 'play');
+
+  TvInputController? _tv;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 注册播放页这一部分按键语义。回调里用到 PlayerController 时才去读
+    // Provider —— 挂载阶段就 read 会让它提前实例化。
+    _tv = context.read<TvInputController>()
+      ..toggleQueue = _toggleQueue
+      ..focusPlayButton = _playFocusNode.requestFocus
+      ..playPrevious = _playPrevious
+      ..playNext = _playNext
+      ..seekBy = _seekBy;
+  }
+
+  void _toggleQueue() => _drawerOpen ? _closeDrawer() : _openDrawer();
+
+  void _playPrevious() {
+    context.read<PlayerController>().playPrevious();
+  }
+
+  void _playNext() {
+    context.read<PlayerController>().playNext();
+  }
+
+  /// 播放模式下 ←/→ 的快进快退。没拿到总时长就不动，避免 seek 到乱值。
+  void _seekBy(int deltaMs) {
+    final playerState = context.read<PlayerState>();
+    final total = playerState.duration.inMilliseconds;
+    if (total <= 0) return;
+    final position = playerState.position.inMilliseconds;
+    final next = (position + deltaMs).clamp(0, total).toInt();
+    context.read<PlayerController>().seek(Duration(milliseconds: next));
+  }
 
   @override
   void initState() {
@@ -72,16 +111,25 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   void dispose() {
+    _tv?.toggleQueue = null;
+    _tv?.focusPlayButton = null;
+    _tv?.playPrevious = null;
+    _tv?.playNext = null;
+    _tv?.seekBy = null;
+    _tv?.setQueueOpen(false);
+    _tv = null;
     _floatController.dispose();
     _glowController.dispose();
     _drawerController.dispose();
     _drawerCloseNode.dispose();
     _playlistToggleNode.dispose();
+    _playFocusNode.dispose();
     super.dispose();
   }
 
   void _openDrawer() {
     if (_drawerOpen) return;
+    _tv?.setQueueOpen(true);
     setState(() {
       _drawerOpen = true;
       _drawerController.forward();
@@ -95,6 +143,7 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   void _closeDrawer() {
     if (!_drawerOpen) return;
+    _tv?.setQueueOpen(false);
     setState(() {
       _drawerOpen = false;
       _drawerController.reverse();
@@ -552,6 +601,7 @@ class _PlayerScreenState extends State<PlayerScreen>
           : null,
       onPlaylistToggle: _drawerOpen ? _closeDrawer : _openDrawer,
       playlistToggleFocusNode: _playlistToggleNode,
+      playFocusNode: _playFocusNode,
       onToggleTranslations: () =>
           setState(() => _showTranslations = !_showTranslations),
     );

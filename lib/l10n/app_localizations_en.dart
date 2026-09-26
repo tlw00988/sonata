@@ -21,6 +21,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsTab => 'Settings';
 
   @override
+  String get tvControlHint => 'Control mode · OK to select · Back to exit';
+
+  @override
+  String get tvNavigationHint =>
+      'Menu held · ↑ Library · ↓ Playlists · ←→ Albums';
+
+  @override
   String get libraryTitle => 'Library';
 
   @override

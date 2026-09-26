@@ -22,6 +22,10 @@ class FusedControlDock extends StatefulWidget {
   /// 队列按钮的焦点节点：播放页用它把焦点从关闭的抽屉还回来。
   final FocusNode? playlistToggleFocusNode;
 
+  /// 播放键的焦点节点：遥控器从播放模式进入控件模式时，焦点要有个确定的
+  /// 落点，否则第一下方向键不知道该从哪儿算起。
+  final FocusNode? playFocusNode;
+
   const FusedControlDock({
     super.key,
     required this.playerState,
@@ -37,6 +41,7 @@ class FusedControlDock extends StatefulWidget {
     this.onPlaylistToggle,
     this.onToggleTranslations,
     this.playlistToggleFocusNode,
+    this.playFocusNode,
   });
 
   @override
@@ -314,6 +319,7 @@ class _FusedControlDockState extends State<FusedControlDock> {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
+              focusNode: widget.playFocusNode,
               onTap: widget.onPlayPause,
               borderRadius: BorderRadius.circular(24),
               // 白色圆钮正好填满 InkWell 时，描边会压在圆边上。留 3px 让

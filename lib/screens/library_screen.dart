@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../api/api.dart';
 import '../player/player.dart';
 import '../models/models.dart';
+import '../tv/tv.dart';
 import '../l10n/app_localizations.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -41,6 +42,11 @@ class _LibraryScreenState extends State<LibraryScreen>
   List<Playlist> _playlists = [];
   List<Track> _localTracks = [];
 
+  /// 遥控器"菜单 + ←/→"在专辑之间翻页时的游标，-1 表示还没进过专辑页。
+  int _albumCursor = -1;
+
+  TvInputController? _tv;
+
   @override
   void initState() {
     super.initState();
@@ -59,12 +65,48 @@ class _LibraryScreenState extends State<LibraryScreen>
         _loadAllData();
       }
     }
+    // 注册曲库这一部分按键语义：菜单 + 上下切分区、菜单 + 左右翻专辑。
+    _tv = context.read<TvInputController>()
+      ..goLibraryTab = _selectLibraryTab
+      ..albumDelta = _stepAlbum;
   }
 
   @override
   void dispose() {
+    _tv?.goLibraryTab = null;
+    _tv?.albumDelta = null;
+    _tv = null;
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _selectLibraryTab(int index) {
+    if (index < 0 || index >= _tabController.length) return;
+    _tabController.animateTo(index);
+  }
+
+  /// 菜单 + ←/→：在曲库的专辑分区里按顺序翻专辑详情。
+  void _stepAlbum(int delta) {
+    if (_repository == null || _albums.isEmpty) return;
+    final int next;
+    if (_albumCursor < 0) {
+      // 还没进过专辑页：往右从头开始，往左从尾开始。
+      next = delta > 0 ? 0 : _albums.length - 1;
+    } else {
+      next = (_albumCursor + delta).clamp(0, _albums.length - 1);
+    }
+    _albumCursor = next;
+    _tabController.animateTo(1);
+
+    final navigator = Navigator.of(context);
+    // 详情页压在底部导航之上，不先退回主页，换专辑和换 tab 都看不见。
+    navigator.popUntil((route) => route.isFirst);
+    navigator.push(
+      MaterialPageRoute(
+        builder: (context) =>
+            AlbumDetailScreen(album: _albums[next], repository: _repository!),
+      ),
+    );
   }
 
   void _loadData() {
@@ -679,6 +721,9 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   void _navigateToAlbum(BuildContext context, Album album) {
+    // 手指点开的专辑要记进游标，否则遥控器的"上一个 / 下一个专辑"会从
+    // 上一次翻到的地方接着算，跟屏幕上正看着的这张对不上。
+    _albumCursor = _albums.indexOf(album);
     Navigator.push(
       context,
       MaterialPageRoute(

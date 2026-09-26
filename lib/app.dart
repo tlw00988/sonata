@@ -9,6 +9,7 @@ import 'theme/theme.dart';
 import 'player/player.dart';
 import 'screens/screens.dart';
 import 'api/api.dart';
+import 'tv/tv.dart';
 import 'widgets/tab_focus_scope.dart';
 
 class SonataApp extends StatefulWidget {
@@ -26,6 +27,9 @@ class _SonataAppState extends State<SonataApp> {
   /// Currently visible bottom-tab. Lives above the Navigator so detail
   /// routes pushed from the library can hand control back to the player.
   final ValueNotifier<int> _tabIndex = ValueNotifier<int>(0);
+
+  /// 遥控器的组合键要把详情页先退回主页，得从状态机里够到 Navigator。
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -129,6 +133,20 @@ class _SonataAppState extends State<SonataApp> {
         // 直接抛异常打断构建），改用 ChangeNotifierProvider；它的消费者都用
         // context.read + ValueListenableBuilder，不依赖 Provider 驱动重建。
         ChangeNotifierProvider<ValueNotifier<int>>.value(value: _tabIndex),
+        // 遥控器按键状态机。lazy: false —— 它必须在第一帧之前就把自己挂到
+        // HardwareKeyboard / FocusManager 上，否则最早那几下按键会漏掉。
+        ChangeNotifierProvider<TvInputController>(
+          lazy: false,
+          create: (context) {
+            // 这里不能碰 PlayerController：它是懒创建的，一碰就会在测试里
+            // 提前实例化（audioHandler 还没初始化）而炸掉。播放相关的回调由
+            // PlayerScreen 在自己挂上焦点树时注册，而且用到时才去读 Provider。
+            final controller = TvInputController(tabIndex: _tabIndex);
+            controller.popToHome = () =>
+                _navigatorKey.currentState?.popUntil((r) => r.isFirst);
+            return controller;
+          },
+        ),
       ],
       child: DynamicColorBuilder(
         builder: (lightDynamic, darkDynamic) {
@@ -214,6 +232,7 @@ class _SonataAppState extends State<SonataApp> {
           return MaterialApp(
             title: 'Sonata',
             debugShowCheckedModeBanner: false,
+            navigatorKey: _navigatorKey,
             themeMode: _themeMode,
             theme: effectiveLight,
             darkTheme: effectiveDark,
@@ -285,86 +304,156 @@ class _MainNavigationState extends State<MainNavigation> {
     final loc = AppLocalizations.of(context)!;
     final tabIndex = context.read<ValueNotifier<int>>();
 
-    return ValueListenableBuilder<int>(
-      valueListenable: tabIndex,
-      builder: (context, index, _) {
-        return Scaffold(
-          // 隐藏的 tab 整棵子树退出焦点树，遥控器方向键才不会走到看不见
-          // 的界面上。详见 TabFocusScope。
-          body: IndexedStack(
-            index: index,
-            children: [
-              for (int i = 0; i < _screens.length; i++)
-                TabFocusScope(active: i == index, child: _screens[i]),
-            ],
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: index,
-            onDestinationSelected: (i) => tabIndex.value = i,
-            height: 70,
-            backgroundColor: colorScheme.surface,
-            indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
-            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
-            surfaceTintColor: Colors.transparent,
-            shadowColor: Colors.transparent,
-            labelTextStyle: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.selected)) {
+    return TvBackScope(
+      child: ValueListenableBuilder<int>(
+        valueListenable: tabIndex,
+        builder: (context, index, _) {
+          return Scaffold(
+            // 隐藏的 tab 整棵子树退出焦点树，遥控器方向键才不会走到看不见
+            // 的界面上。详见 TabFocusScope。
+            body: Stack(
+              children: [
+                IndexedStack(
+                  index: index,
+                  children: [
+                    for (int i = 0; i < _screens.length; i++)
+                      TabFocusScope(active: i == index, child: _screens[i]),
+                  ],
+                ),
+                // 按住菜单 / 进入控件模式时的模式提示条。不吃焦点也不吃点击，
+                // 否则它会把遥控器的焦点链截断。
+                const _TvHintBanner(),
+              ],
+            ),
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: index,
+              onDestinationSelected: (i) => tabIndex.value = i,
+              height: 70,
+              backgroundColor: colorScheme.surface,
+              indicatorColor: colorScheme.primary.withValues(alpha: 0.15),
+              labelBehavior:
+                  NavigationDestinationLabelBehavior.onlyShowSelected,
+              surfaceTintColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                if (states.contains(WidgetState.selected)) {
+                  return TextStyle(
+                    color: colorScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  );
+                }
                 return TextStyle(
-                  color: colorScheme.primary,
+                  color: colorScheme.onSurfaceVariant,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 );
-              }
-              return TextStyle(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              );
-            }),
-            destinations: [
-              NavigationDestination(
-                icon: Icon(
-                  Icons.music_note_outlined,
-                  size: 24,
-                  color: colorScheme.onSurfaceVariant,
+              }),
+              destinations: [
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.music_note_outlined,
+                    size: 24,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  selectedIcon: Icon(
+                    Icons.music_note,
+                    size: 24,
+                    color: colorScheme.primary,
+                  ),
+                  label: loc.playerTab,
                 ),
-                selectedIcon: Icon(
-                  Icons.music_note,
-                  size: 24,
-                  color: colorScheme.primary,
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.library_music_outlined,
+                    size: 24,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  selectedIcon: Icon(
+                    Icons.library_music,
+                    size: 24,
+                    color: colorScheme.primary,
+                  ),
+                  label: loc.libraryTab,
                 ),
-                label: loc.playerTab,
-              ),
-              NavigationDestination(
-                icon: Icon(
-                  Icons.library_music_outlined,
-                  size: 24,
-                  color: colorScheme.onSurfaceVariant,
+                NavigationDestination(
+                  icon: Icon(
+                    Icons.settings_outlined,
+                    size: 24,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  selectedIcon: Icon(
+                    Icons.settings,
+                    size: 24,
+                    color: colorScheme.primary,
+                  ),
+                  label: loc.settingsTab,
                 ),
-                selectedIcon: Icon(
-                  Icons.library_music,
-                  size: 24,
-                  color: colorScheme.primary,
-                ),
-                label: loc.libraryTab,
-              ),
-              NavigationDestination(
-                icon: Icon(
-                  Icons.settings_outlined,
-                  size: 24,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-                selectedIcon: Icon(
-                  Icons.settings,
-                  size: 24,
-                  color: colorScheme.primary,
-                ),
-                label: loc.settingsTab,
-              ),
-            ],
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// 模式提示条。
+///
+/// 菜单键是个隐形的前缀键：按住它的时候方向键的语义已经变了，屏幕上必须
+/// 有反馈，否则用户只能靠背口诀。同理，播放页按确定键进入控件模式后，方向
+/// 键从"控制播放"变回"挪焦点"，也要说一声。
+class _TvHintBanner extends StatelessWidget {
+  const _TvHintBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<TvInputController>();
+    final loc = AppLocalizations.of(context)!;
+
+    final String? text;
+    if (controller.menuHeld) {
+      text = loc.tvNavigationHint;
+    } else if (controller.mode == TvMode.control) {
+      text = loc.tvControlHint;
+    } else {
+      text = null;
+    }
+
+    return Positioned(
+      top: 12,
+      left: 0,
+      right: 0,
+      child: IgnorePointer(
+        // 提示条绝不能进焦点树，否则方向键会先被它截走。
+        child: ExcludeFocus(
+          child: Center(
+            child: text == null
+                ? const SizedBox.shrink()
+                : DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.75),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 9,
+                      ),
+                      child: Text(
+                        text,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

@@ -6,6 +6,9 @@
   "libraryTab": "Library",
   "settingsTab": "Settings",
 
+  "tvControlHint": "Control mode · OK to select · Back to exit",
+  "tvNavigationHint": "Menu held · ↑ Library · ↓ Playlists · ←→ Albums",
+
   "libraryTitle": "Library",
   "songsTab": "Songs",
   "albumsTab": "Albums",

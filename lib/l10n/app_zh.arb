@@ -6,6 +6,9 @@
   "libraryTab": "音乐库",
   "settingsTab": "设置",
 
+  "tvControlHint": "控件模式 · OK 选择 · 返回键退出",
+  "tvNavigationHint": "按住菜单 · ↑ 音乐库 · ↓ 播放列表 · ←→ 专辑",
+
   "libraryTitle": "音乐库",
   "songsTab": "歌曲",
   "albumsTab": "专辑",

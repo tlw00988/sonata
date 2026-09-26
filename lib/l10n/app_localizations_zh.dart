@@ -21,6 +21,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsTab => '设置';
 
   @override
+  String get tvControlHint => '控件模式 · OK 选择 · 返回键退出';
+
+  @override
+  String get tvNavigationHint => '按住菜单 · ↑ 音乐库 · ↓ 播放列表 · ←→ 专辑';
+
+  @override
   String get libraryTitle => '音乐库';
 
   @override
