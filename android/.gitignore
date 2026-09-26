@@ -1,8 +1,9 @@
-gradle-wrapper.jar
+# Gradle wrapper 按官方建议签入仓库（gradlew / gradlew.bat /
+# gradle-wrapper.jar），保证任何克隆都能直接 ./gradlew 构建，而不是靠
+# flutter 的 injectGradleWrapperIfNeeded 从 SDK 缓存里现塞一份——那份是
+# 跟着构建机上的 Flutter 版本走的。
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
