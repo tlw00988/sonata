@@ -5,7 +5,7 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [未发布]
+## [0.2.0] - 2026-09-26
 
 ### 新增
 
@@ -33,6 +33,9 @@
   拦截点是 `HardwareKeyboard.addHandler`（先于焦点系统、且没有焦点时也会跑）
   配合 `FocusManager.addEarlyKeyEventHandler`（真正停掉焦点链的那个），只用
   一个钩子会漏：前者吞掉事件并不会阻止焦点系统继续处理。
+
+- **开源入口**：设置页「关于」里新增 GitHub 一栏，点击用系统浏览器打开仓库
+  地址；打不开时会把地址弹出来，方便自己复制。
 
 ### 变更
 
@@ -68,6 +71,9 @@
   `Provider` 会被拒绝并抛异常打断整棵界面树；改用 `ChangeNotifierProvider`。
   同时补上真正跑到异步初始化完成的启动回归测试——原来的冒烟测试只 pump
   一帧，停在加载页上，压根没走到 Provider 树
+
+- **版本号显示**：设置页「版本」原来写死显示 1.0.0，改为读取 `package_info`，
+  跟随 pubspec 显示真实版本（如 0.2.0+2）
 
 ## [0.1.0] - 2026-09-24
 

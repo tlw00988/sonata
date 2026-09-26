@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../api/api.dart';
 import '../credentials.dart';
 import '../l10n/app_localizations.dart';
@@ -35,11 +37,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool _musicDirsLoaded = false;
 
+  /// 版本号读自 package_info（跟随 pubspec.yaml），不是写死的字符串。
+  String _versionLabel = '';
+
+  /// 开源仓库地址。
+  static const String _repositoryUrl = 'https://github.com/tlw00988/sonata';
+
   @override
   void initState() {
     super.initState();
     _loadSettings();
     _loadMusicDirs();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _versionLabel = '${info.version}+${info.buildNumber}';
+    });
+  }
+
+  Future<void> _openRepository() async {
+    final uri = Uri.parse(_repositoryUrl);
+    var opened = false;
+    try {
+      opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } on Exception {
+      opened = false;
+    }
+    // 打不开就直接把地址露出来，至少用户还能自己复制。
+    if (!opened && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_repositoryUrl)));
+    }
   }
 
   @override
@@ -408,8 +441,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSettingTile(
               icon: Icons.info_outline,
               title: loc.version,
-              subtitle: '1.0.0',
+              subtitle: _versionLabel,
               onTap: null,
+            ),
+            _buildSettingTile(
+              icon: Icons.open_in_new,
+              title: 'GitHub',
+              subtitle: _repositoryUrl,
+              onTap: _openRepository,
             ),
             _buildSettingTile(
               icon: Icons.article_outlined,
