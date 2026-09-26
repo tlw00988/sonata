@@ -125,7 +125,10 @@ class _SonataAppState extends State<SonataApp> {
         Provider<Function()>.value(value: _clearRepository),
         Provider<Function(ThemeMode)>.value(value: setThemeMode),
         Provider<ThemeMode>.value(value: _themeMode),
-        Provider<ValueNotifier<int>>.value(value: _tabIndex),
+        // _tabIndex 是 ValueNotifier，Provider 会拒绝 Listenable 子类（debug 下
+        // 直接抛异常打断构建），改用 ChangeNotifierProvider；它的消费者都用
+        // context.read + ValueListenableBuilder，不依赖 Provider 驱动重建。
+        ChangeNotifierProvider<ValueNotifier<int>>.value(value: _tabIndex),
       ],
       child: DynamicColorBuilder(
         builder: (lightDynamic, darkDynamic) {
