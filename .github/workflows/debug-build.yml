@@ -1,6 +1,6 @@
 name: Debug Build
 
-# 每次通过 Flutter CI 后出一份可安装的产物：Windows exe、Linux AppImage、
+# 每次通过 Flutter CI 后出一份可运行的产物：Windows exe、Linux tar.gz、
 # Android APK（arm64-v8a + armeabi-v7a 两个单独的包）、iOS IPA。
 # 都是 debug 构建，方便对着日志定位是哪次提交引入的问题；
 # 要发正式版请打 v* tag 走 Release 工作流。
@@ -79,7 +79,7 @@ jobs:
           retention-days: 14
 
   build-linux:
-    name: Linux AppImage
+    name: Linux tar.gz
     runs-on: ubuntu-latest
 
     steps:
@@ -105,8 +105,6 @@ jobs:
             libasound2-dev \
             libmpv-dev \
             libsecret-1-dev \
-            squashfs-tools \
-            desktop-file-utils
 
       - name: Get dependencies
         run: flutter pub get
