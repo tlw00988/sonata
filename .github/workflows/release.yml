@@ -1,10 +1,7 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: write
@@ -101,11 +98,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # Release 签名凭据从 Secrets 还原成 android/key.properties + keystore，
-      # 两者都被 android/.gitignore 忽略，不会进仓库。
-      # build.gradle.kts 要求四项齐了才用 release 签名，缺任何一个就退回
-      # debug 签名——所以四个 secret 没配齐时这里直接跳过，Release 照样能绿，
-      # 配好之后下一次打 tag 自动生效。
       - name: Restore keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -119,7 +111,6 @@ jobs:
             exit 0
           fi
           printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/upload-keystore.jks
-          # storeFile 相对 android/ 目录解析（rootProject.file）
           printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
             "upload-keystore.jks" \
             "$ANDROID_KEYSTORE_PASSWORD" \
@@ -131,10 +122,6 @@ jobs:
       - name: Build APK
         run: flutter build apk --release
 
-      # 打印签名证书的持有者，方便确认是不是自己的 keystore（配没配 Secrets
-      # 一眼能看出：debug keystore 还是 CN=你的名字）。
-      # 用 apksigner 而不是 keytool——AGP 出的包只有 v2/v3 签名，没有 v1
-      # JAR 签名，keytool 会报"不是已签名的 jar 文件"。
       - name: Show APK signer
         run: |
           set -euo pipefail
@@ -174,9 +161,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # --no-codesign 只出 .xcarchive，没有可直接安装的 ipa；
-      # 这里把它重新打包成标准 ipa（Payload/<App>.app 在压缩包根目录），
-      # 方便下载后交给 AltStore / TrollStore 等工具签名安装。
       - name: Build iOS
         run: flutter build ipa --release --no-codesign
 

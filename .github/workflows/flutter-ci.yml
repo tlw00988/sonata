@@ -3,7 +3,9 @@ name: Flutter CI
 on:
   push:
     branches:
-      - master
+      - '**'
+    tags:
+      - 'v*'
   pull_request:
   workflow_dispatch:
 
@@ -53,3 +55,20 @@ jobs:
 
       - name: Build Linux
         run: flutter build linux --release
+
+  debug-build:
+    name: Debug Build
+    needs: analyze
+    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && !startsWith(github.ref, 'refs/tags/') }}
+    uses: ./.github/workflows/debug-build.yml
+    permissions:
+      contents: read
+
+  release:
+    name: Release
+    needs: analyze
+    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && startsWith(github.ref, 'refs/tags/v') }}
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: write
+    secrets: inherit

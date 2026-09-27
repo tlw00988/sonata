@@ -1,17 +1,12 @@
 name: Debug Build
 
-# 每次提交都出一份可安装的产物：Windows exe、Linux AppImage、
+# 每次通过 Flutter CI 后出一份可安装的产物：Windows exe、Linux AppImage、
 # Android APK（arm64-v8a + armeabi-v7a 两个单独的包）、iOS IPA。
 # 都是 debug 构建，方便对着日志定位是哪次提交引入的问题；
 # 要发正式版请打 v* tag 走 Release 工作流。
 
 on:
-  push:
-    branches:
-      # 限成分支：打 v* tag 时 Release 工作流已经会出正式包，
-      # 这里再跑一遍纯属重复（on: push 不加分支过滤时 tag 推送也会触发）。
-      - '**'
-  workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -128,9 +123,6 @@ jobs:
           mkdir -p "$appdir"
           cp -r "$bundle"/. "$appdir"/
 
-          # AppImage 只要求 AppDir 里有 AppRun + .desktop + 图标。
-          # Flutter 的可执行文件靠 /proc/self/exe 找同级的 lib/ 与 data/，
-          # 所以 AppRun 直接 exec 同目录下的二进制即可。
           cat > "$appdir/AppRun" <<'EOF'
           #!/bin/sh
           here="$(dirname "$(readlink -f "$0")")"
@@ -155,9 +147,6 @@ jobs:
           wget -q --tries=3 --timeout=60 -O /tmp/appimagetool \
             https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x /tmp/appimagetool
-          # appimagetool 本身是个 AppImage，直接跑要挂 FUSE；先解包成普通
-          # 文件再通过它的 AppRun 执行（它会把自己带的 mksquashfs 加进 PATH），
-          # 这条路不依赖 FUSE 也不依赖 APPIMAGE_EXTRACT_AND_RUN。
           /tmp/appimagetool --appimage-extract >/dev/null
           ARCH=x86_64 ./squashfs-root/AppRun "$appdir" Sonata-linux-x64-debug.AppImage
           rm -rf ./squashfs-root
@@ -187,9 +176,6 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      # --no-codesign 只出 .xcarchive，没有可直接安装的 ipa；
-      # 这里把它重新打包成标准 ipa（Payload/<App>.app 在压缩包根目录），
-      # 方便下载后交给 AltStore / TrollStore 等工具签名安装。
       - name: Build iOS
         run: flutter build ipa --debug --no-codesign
 
